@@ -34,6 +34,7 @@ const SECTIONS: { name: string; items: NavItem[] }[] = [
       { id: "orders", label: "Orders", href: "/orders", icon: ArrowRightLeft, shortcut: "g o" },
       { id: "journal", label: "Journal", href: "/journal", icon: BookOpen, shortcut: "g j" },
       { id: "alerts", label: "Alerts", href: "/alerts", icon: Bell, shortcut: "g a" },
+      { id: "attribution", label: "Attribution", href: "/attribution", icon: PieChart, shortcut: "g p" },
     ],
   },
   {
@@ -42,6 +43,7 @@ const SECTIONS: { name: string; items: NavItem[] }[] = [
       { id: "watchlist", label: "Watchlist", href: "/watchlist", icon: Star, shortcut: "g w" },
       { id: "forecast", label: "Forecast", href: "/forecast", icon: LineChart, shortcut: "g f" },
       { id: "backtest", label: "Backtest", href: "/backtest", icon: FlaskConical, shortcut: "g t" },
+      { id: "replay", label: "Replay", href: "/replay", icon: History, shortcut: "g r" },
     ],
   },
   {
