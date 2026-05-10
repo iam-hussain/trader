@@ -18,6 +18,10 @@ import { alertRoutes } from "./routes/alerts.js";
 import { sseRoutes } from "./routes/sse.js";
 import { ordersRoutes } from "./routes/orders.js";
 import { positionsRoutes } from "./routes/positions.js";
+import { forecastRoutes } from "./routes/forecast.js";
+import { backtestRoutes } from "./routes/backtest.js";
+import { replayRoutes } from "./routes/replay.js";
+import { attributionRoutes } from "./routes/attribution.js";
 import { authPlugin } from "./plugins/auth.js";
 import { startJobs, stopJobs } from "./jobs/index.js";
 
@@ -56,6 +60,10 @@ export async function buildServer() {
   await app.register(sseRoutes, { prefix: "/api/sse" });
   await app.register(ordersRoutes, { prefix: "/api/orders" });
   await app.register(positionsRoutes, { prefix: "/api/positions" });
+  await app.register(forecastRoutes, { prefix: "/api/forecast" });
+  await app.register(backtestRoutes, { prefix: "/api/backtest" });
+  await app.register(replayRoutes, { prefix: "/api/replay" });
+  await app.register(attributionRoutes, { prefix: "/api/attribution" });
   await app.register(tradingViewWebhookRoute, { prefix: "/api/webhooks" });
 
   return app;

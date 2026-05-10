@@ -6,7 +6,7 @@ import {
   type ReplayJobResult,
   type Session,
 } from "./queue.js";
-import { generateBrief } from "../services/signal-engine.js";
+import { generateBrief, type GenerateBriefInput } from "../services/signal-engine.js";
 
 let _worker: Worker<ReplayJobData, ReplayJobResult> | null = null;
 
