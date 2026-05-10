@@ -13,6 +13,8 @@ import {
   Shapes,
   Settings,
   Search,
+  History,
+  PieChart,
 } from "lucide-react";
 
 interface NavItem {
