@@ -41,6 +41,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Phase 5 forecast + backtest endpoints live in their own routers
+try:
+    from forecast.router import router as forecast_router
+    app.include_router(forecast_router)
+except ImportError:
+    pass
+try:
+    from backtest.router import router as backtest_router
+    app.include_router(backtest_router)
+except ImportError:
+    pass
+
 
 # ── Health ──────────────────────────────────────────────────────────────────
 @app.get("/healthz")

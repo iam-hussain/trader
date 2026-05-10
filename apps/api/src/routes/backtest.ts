@@ -110,7 +110,7 @@ export async function backtestRoutes(app: FastifyInstance) {
         symbol: body.data.symbol.toUpperCase(),
         startDate: new Date(body.data.start),
         endDate: new Date(body.data.end),
-        params: body.data.params,
+        params: JSON.parse(JSON.stringify(body.data.params)) as object,
         accountSize,
         riskPerTradePct,
         status: "queued",

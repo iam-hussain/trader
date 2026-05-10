@@ -113,15 +113,17 @@ export function startReplayWorker(): Worker<ReplayJobData, ReplayJobResult> {
         // TODO: full historical replay needs a snapshot of analysis bundles
         // captured on the original date. For Phase-5 we re-run the pipeline
         // against current data and tag the resulting brief as a replay.
-        const gen = await generateBrief({
+        const provider = (replay.llmProvider ?? undefined) as
+          | GenerateBriefInput["llmProvider"]
+          | undefined;
+        const genInput: GenerateBriefInput = {
           userId,
           session,
           symbols,
-          ...(replay.llmProvider
-            ? { llmProvider: replay.llmProvider as Parameters<typeof generateBrief>[0]["llmProvider"] }
-            : {}),
-          ...(replay.llmModel ? { llmModel: replay.llmModel } : {}),
-        });
+        };
+        if (provider) genInput.llmProvider = provider;
+        if (replay.llmModel) genInput.llmModel = replay.llmModel;
+        const gen = await generateBrief(genInput);
         errors.push(...gen.errors);
 
         const generatedSignalRows = await prisma.signal.findMany({
