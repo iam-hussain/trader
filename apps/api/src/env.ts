@@ -12,8 +12,9 @@ const Env = z.object({
   OPENAI_API_KEY: z.string().optional(),
   GOOGLE_API_KEY: z.string().optional(),
   OLLAMA_HOST: z.string().default("http://localhost:11434"),
+  LMSTUDIO_HOST: z.string().default("http://localhost:1234"),
   DEFAULT_LLM_PROVIDER: z
-    .enum(["anthropic", "openai", "google", "ollama"])
+    .enum(["anthropic", "openai", "google", "ollama", "lmstudio"])
     .default("anthropic"),
 
   IBKR_HOST: z.string().default("127.0.0.1"),

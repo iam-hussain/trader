@@ -211,7 +211,7 @@ trader/
 - **TypeScript for everything else** — shared types between web and api.
   Zod validates LLM outputs, request bodies, and env vars.
 - **Vercel AI SDK** — provider-agnostic interface with first-class structured
-  output across Anthropic / OpenAI / Google / Ollama. Switching providers is
+  output across Anthropic / OpenAI / Google / Ollama / LM Studio. Switching providers is
   one-line.
 - **BullMQ over a custom scheduler** — Redis-backed, durable, retries,
   observable in Bull Board (added in P3).

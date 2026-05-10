@@ -205,7 +205,10 @@ async function buildProviderConfig(
   userId: string,
   provider: ProviderId
 ): Promise<ProviderConfig> {
-  const cfg: ProviderConfig = { ollamaHost: env.OLLAMA_HOST };
+  const cfg: ProviderConfig = {
+    ollamaHost: env.OLLAMA_HOST,
+    lmstudioHost: env.LMSTUDIO_HOST,
+  };
   if (provider === "anthropic") cfg.anthropicApiKey = await getProviderKey(userId, "anthropic");
   if (provider === "openai") cfg.openaiApiKey = await getProviderKey(userId, "openai");
   if (provider === "google") cfg.googleApiKey = await getProviderKey(userId, "google");

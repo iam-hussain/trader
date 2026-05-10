@@ -12,7 +12,7 @@ const SettingsPatch = z.object({
   defaultHoldPeriod: z.enum(["intraday", "swing", "position"]).optional(),
   blackoutMacroEvents: z.boolean().optional(),
   blackoutMinutes: z.number().int().min(0).max(120).optional(),
-  defaultLlmProvider: z.enum(["anthropic", "openai", "google", "ollama"]).optional(),
+  defaultLlmProvider: z.enum(["anthropic", "openai", "google", "ollama", "lmstudio"]).optional(),
   defaultLlmModel: z.string().optional(),
   ibkrMode: z.enum(["paper", "live"]).optional(),
   ibkrHost: z.string().optional(),

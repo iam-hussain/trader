@@ -147,7 +147,7 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Risk limits (account size, max risk/trade, max daily loss, max trades/day) | ✅ | persisted in Mongo |
-| LLM provider switcher (Claude / GPT / Gemini / Ollama) | ✅ | with key validation |
+| LLM provider switcher (Claude / GPT / Gemini / Ollama / LM Studio) | ✅ | with key validation; LM Studio uses OpenAI-compatible local server |
 | API key management (encrypted at rest, env fallback) | ✅ | AES-256-GCM, lastFour hint |
 | IBKR Gateway host/port + paper/live toggle | ✅ | live UI uses red banner (P4) |
 | Theme (dark default, light option) | ✅ | dark only in v1 |
@@ -163,6 +163,7 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 | OpenAI GPT | ✅ | structured output |
 | Google Gemini | ✅ | structured output |
 | Local Ollama | ✅ | profile-gated docker service |
+| Local LM Studio | ✅ | OpenAI-compatible API; configured via `LMSTUDIO_HOST` (default `http://localhost:1234`) |
 | Yahoo Finance (yfinance) | ✅ | quotes, news, options chain |
 | Finviz | ✅ | snapshot + news |
 | CBOE | ✅ | VIX + total/equity P/C |
