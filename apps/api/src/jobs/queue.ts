@@ -19,6 +19,26 @@ export type BriefJobResult = {
   briefId: string;
 };
 
+export type BacktestJobData = {
+  runId: string;
+  userId: string;
+};
+
+export type BacktestJobResult = {
+  runId: string;
+  ok: boolean;
+};
+
+export type ReplayJobData = {
+  replayId: string;
+  userId: string;
+};
+
+export type ReplayJobResult = {
+  replayId: string;
+  ok: boolean;
+};
+
 let _connection: Redis | null = null;
 
 /**
@@ -37,6 +57,8 @@ export function connection(): Redis {
 
 let _briefQueue: Queue<BriefJobData, BriefJobResult> | null = null;
 let _alertQueue: Queue<AlertJobData> | null = null;
+let _backtestQueue: Queue<BacktestJobData, BacktestJobResult> | null = null;
+let _replayQueue: Queue<ReplayJobData, ReplayJobResult> | null = null;
 
 export function briefQueue(): Queue<BriefJobData, BriefJobResult> {
   if (_briefQueue) return _briefQueue;
@@ -66,13 +88,44 @@ export function alertQueue(): Queue<AlertJobData> {
   return _alertQueue;
 }
 
+export function backtestQueue(): Queue<BacktestJobData, BacktestJobResult> {
+  if (_backtestQueue) return _backtestQueue;
+  _backtestQueue = new Queue<BacktestJobData, BacktestJobResult>("backtest", {
+    connection: connection(),
+    defaultJobOptions: {
+      // Backtests are expensive — don't auto-retry by default.
+      attempts: 1,
+      removeOnComplete: { age: 24 * 3600, count: 200 },
+      removeOnFail: { age: 7 * 24 * 3600, count: 200 },
+    },
+  });
+  return _backtestQueue;
+}
+
+export function replayQueue(): Queue<ReplayJobData, ReplayJobResult> {
+  if (_replayQueue) return _replayQueue;
+  _replayQueue = new Queue<ReplayJobData, ReplayJobResult>("replay", {
+    connection: connection(),
+    defaultJobOptions: {
+      attempts: 1,
+      removeOnComplete: { age: 24 * 3600, count: 200 },
+      removeOnFail: { age: 7 * 24 * 3600, count: 200 },
+    },
+  });
+  return _replayQueue;
+}
+
 export async function closeQueues(): Promise<void> {
   const tasks: Promise<unknown>[] = [];
   if (_briefQueue) tasks.push(_briefQueue.close());
   if (_alertQueue) tasks.push(_alertQueue.close());
+  if (_backtestQueue) tasks.push(_backtestQueue.close());
+  if (_replayQueue) tasks.push(_replayQueue.close());
   await Promise.allSettled(tasks);
   _briefQueue = null;
   _alertQueue = null;
+  _backtestQueue = null;
+  _replayQueue = null;
   if (_connection) {
     await _connection.quit().catch(() => {
       /* ignore */

@@ -120,7 +120,7 @@ detail page, LLM provider switcher, quant service skeleton.
 
 ---
 
-## Phase 4 — Execution 🟡 (current)
+## Phase 4 — Execution ✅
 
 **Goal:** stage and fire bracket orders to IBKR with hard server-side
 guardrails and a kill switch.
@@ -153,7 +153,7 @@ guardrails and a kill switch.
 
 ---
 
-## Phase 5 — Forecast & backtest ⏳
+## Phase 5 — Forecast & backtest 🟡 (current)
 
 **Goal:** measure edge before risking it. Forecasts that say what the
 historical evidence supports.

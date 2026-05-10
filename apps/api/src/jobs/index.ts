@@ -1,5 +1,7 @@
 import { startBriefWorker, stopBriefWorker } from "./brief-worker.js";
 import { startAlertWorker, stopAlertWorker } from "./alert-worker.js";
+import { startBacktestWorker, stopBacktestWorker } from "./backtest-worker.js";
+import { startReplayWorker, stopReplayWorker } from "./replay-worker.js";
 import { scheduleRecurringJobs } from "./scheduler.js";
 import { closeQueues } from "./queue.js";
 import {
@@ -8,11 +10,20 @@ import {
 } from "./positions-publisher.js";
 import { env } from "../env.js";
 
-export { briefQueue, alertQueue } from "./queue.js";
+export {
+  briefQueue,
+  alertQueue,
+  backtestQueue,
+  replayQueue,
+} from "./queue.js";
 export type {
   BriefJobData,
   AlertJobData,
   BriefJobResult,
+  BacktestJobData,
+  BacktestJobResult,
+  ReplayJobData,
+  ReplayJobResult,
   Session,
 } from "./queue.js";
 
@@ -23,6 +34,8 @@ export async function startJobs(): Promise<void> {
   started = true;
   startBriefWorker();
   startAlertWorker();
+  startBacktestWorker();
+  startReplayWorker();
   await scheduleRecurringJobs();
 
   if (env.JOBS_ENABLED && env.IBKR_HOST) {
@@ -41,6 +54,8 @@ export async function stopJobs(): Promise<void> {
   await Promise.allSettled([
     stopBriefWorker(),
     stopAlertWorker(),
+    stopBacktestWorker(),
+    stopReplayWorker(),
     stopPositionsPublisher(),
   ]);
   await closeQueues();

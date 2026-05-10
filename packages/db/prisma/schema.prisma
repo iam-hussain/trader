@@ -25,6 +25,8 @@ model User {
   apiKeys      ApiKey[]
   briefs       Brief[]
   alerts       Alert[]
+  backtests    BacktestRun[]
+  replays      Replay[]
 }
 
 model Watchlist {
@@ -203,4 +205,41 @@ model Alert {
   user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId, ticker])
+}
+
+model BacktestRun {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  strategy        String
+  symbol          String
+  startDate       DateTime
+  endDate         DateTime
+  params          Json
+  accountSize     Float
+  riskPerTradePct Float
+  status          String   @default("queued") // queued | running | done | error
+  result          Json?    // BacktestResult (KPIs + trades + equity_curve)
+  error           String?
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Replay {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  date        DateTime
+  session     String   // premarket | midday | postmarket
+  llmProvider String?
+  llmModel    String?
+  status      String   @default("queued")
+  result      Json?    // {generatedSignals, actualSignals, comparison}
+  error       String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, date])
 }

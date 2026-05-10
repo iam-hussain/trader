@@ -78,7 +78,13 @@ The compute layer. Three sub-areas:
 - `indicators/` — `technicals.py` builds a bundle (RSI, MACD, BB, EMAs, ATR,
   VWAP, S/R, trend, signals).
 - `sentiment/` — FinBERT (lazy load) + lexicon fallback + article aggregator.
-- `forecast/`, `backtest/` — stubs for Phase 5.
+- `forecast/` — Prophet + ARIMA/GARCH vol + candlestick patterns with
+  5-year edge stats; lazy-imports heavy ML deps with graceful fallback;
+  exposed via APIRouter.
+- `backtest/` — pure-pandas engine with intra-bar stop/target evaluation,
+  6 strategies (registry-pluggable), Monte Carlo bootstrap, walk-forward
+  harness; APIRouter exposes `/backtest/strategies`, `/backtest/run`,
+  `/walk-forward`, `/monte-carlo`.
 
 ### Mongo (port 27017)
 Single-node replica set (Prisma requires a replica set for transactions).

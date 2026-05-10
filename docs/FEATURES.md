@@ -101,14 +101,14 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Prophet next-week direction | ⏳ | Phase 5 |
-| ARIMA + GARCH volatility forecast | ⏳ | Phase 5 |
-| Pattern recognition (candlestick patterns) | ⏳ | Phase 5 |
-| vectorbt backtest framework | ⏳ | Phase 5 |
-| Built-in strategies (EMA crossover, RSI mean-reversion, PEAD, gap-and-go) | ⏳ | Phase 5 |
-| Walk-forward + Monte Carlo | ⏳ | Phase 5 |
-| Replay / sandbox mode | ⏳ | Phase 5 |
-| Performance attribution | ⏳ | Phase 5 |
+| Prophet next-week direction | 🟡 | P5 — `/forecast/{sym}/prophet` + ForecastChart |
+| ARIMA + GARCH volatility forecast | 🟡 | P5 — `/forecast/{sym}/garch` |
+| Pattern recognition (candlestick patterns) | 🟡 | P5 — 12 patterns + 5y edge stats |
+| Pure-pandas backtest framework | 🟡 | P5 — `engine.run_backtest`, vectorbt deferred |
+| Built-in strategies (EMA crossover, RSI MR, PEAD, gap-and-go, ATR breakout, opening range) | 🟡 | P5 — 6 strategies |
+| Walk-forward + Monte Carlo | 🟡 | P5 — `walk_forward.py`, `monte_carlo.py` |
+| Replay / sandbox mode | 🟡 | P5 — re-run pipeline + diff vs actual brief |
+| Performance attribution (by tag / sector / hold period / LLM) | 🟡 | P5 — `/api/attribution/*` |
 
 ## Macro & calendar
 

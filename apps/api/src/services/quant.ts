@@ -11,3 +11,18 @@ export async function quantGet<T>(path: string): Promise<T> {
   }
   return JSON.parse(text) as T;
 }
+
+/** POST JSON to the Python quant service. */
+export async function quantPost<T>(path: string, body: unknown): Promise<T> {
+  const url = `${env.QUANT_PUBLIC_URL}${path}`;
+  const { statusCode, body: respBody } = await request(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+  const text = await respBody.text();
+  if (statusCode >= 400) {
+    throw new Error(`quant ${statusCode}: ${text}`);
+  }
+  return JSON.parse(text) as T;
+}

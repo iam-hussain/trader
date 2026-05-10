@@ -100,27 +100,43 @@ Remaining for Phase 4+:
 - [ ] **Real-time fill toasts** (currently SSE updates list; toast
       on the dashboard would be nice)
 
-## Phase 5 (forecast & backtest) — to do
+## Phase 5 (forecast & backtest) — in progress
 
-- [ ] **Forecast modules** (`apps/quant/forecast/`):
-  - Prophet next-week directional forecast w/ confidence bands
-  - ARIMA + GARCH short-term vol forecast
-  - candlestick pattern recognition + statistical edge
-- [ ] **Backtest framework** (`apps/quant/backtest/`):
-  - vectorbt runner
-  - built-in strategies (EMA crossover, RSI MR, Earnings PEAD, gap-and-go,
-    ATR breakout, opening-range breakout)
-  - walk-forward + Monte Carlo
-  - equity curve / DD / win rate / profit factor / Sharpe / Sortino /
-    expectancy / max DD / trade list
-- [ ] **Replay / sandbox mode**:
-  - re-run any past day's signal pipeline using only data available then
-  - compare engine output to actual journal entries
-- [ ] **Performance attribution**:
-  - P/L by setup tag
-  - P/L by sector
-  - P/L by holding period
-  - LLM provider attribution: which model produced winning signals?
+Shipped (or in this commit batch):
+- [x] **Forecast modules** at `apps/quant/forecast/`:
+      Prophet (`prophet_model.py`), ARIMA+GARCH vol (`arima_garch.py`),
+      candlestick patterns with 5-year edge stats (`patterns.py`),
+      shared `common.py` with lazy-import + JSON-safe casting,
+      FastAPI APIRouter (`router.py`)
+- [x] **Backtest framework** at `apps/quant/backtest/`:
+      pure-pandas `engine.run_backtest`, intra-bar stop/target evaluation,
+      6 strategies (ema_crossover, rsi_mean_reversion, earnings_pead,
+      gap_and_go, atr_breakout, opening_range), `monte_carlo.py`
+      bootstrap, `walk_forward.py` harness, FastAPI APIRouter
+- [x] **TS BullMQ workers**: `backtest-worker.ts`, `replay-worker.ts`
+- [x] **API routes**: `/api/forecast/*`, `/api/backtest/*`,
+      `/api/replay/*`, `/api/attribution/{by-tag,by-sector,by-hold-period,
+      by-llm}`
+- [x] **Prisma models**: BacktestRun, Replay
+- [x] **Web UI**: forecast/[symbol], backtest list + [id] detail with
+      EquityCurveChart + DrawdownChart + KPI grid + trade list +
+      Monte Carlo, replay with diff view, attribution dashboard with
+      4 tabs
+- [x] **Inline SVG charts**: EquityCurveChart, DrawdownChart, ForecastChart
+      (zero new chart deps)
+- [x] **Sidebar**: Replay (g r) + Attribution (g p) entries
+
+Remaining for Phase 5+ (carry-over):
+- [ ] **vectorbt** integration for vectorized backtests (current is
+      pure pandas, slower but dependency-free)
+- [ ] **Snapshot the analysis bundle** at brief generation so replay can
+      re-run the engine against historical data (current replay re-runs
+      against current data)
+- [ ] **Walk-forward parameter optimization** (current harness leaves
+      hooks but doesn't optimize)
+- [ ] **More strategies**: opening range with intraday data,
+      momentum with relative strength, volatility expansion
+- [ ] **Backtest result comparison view** (overlay multiple equity curves)
 
 ## Cross-cutting
 
