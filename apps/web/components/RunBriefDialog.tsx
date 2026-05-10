@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { api } from "@/lib/api";
 
 type Session = "premarket" | "midday" | "postmarket";
-type Provider = "anthropic" | "openai" | "google" | "ollama";
+type Provider = "anthropic" | "openai" | "google" | "ollama" | "lmstudio";
 
 export interface RunBriefDialogProps {
   open: boolean;
@@ -35,6 +35,7 @@ const PROVIDERS: { id: Provider; label: string }[] = [
   { id: "openai", label: "OpenAI" },
   { id: "google", label: "Google" },
   { id: "ollama", label: "Ollama (local)" },
+  { id: "lmstudio", label: "LM Studio (local)" },
 ];
 
 export function RunBriefDialog({ open, onClose, defaultSession = "premarket" }: RunBriefDialogProps) {
