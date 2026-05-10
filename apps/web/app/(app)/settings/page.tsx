@@ -2,6 +2,7 @@
 import useSWR from "swr";
 import { useState } from "react";
 import { api, fetcher } from "@/lib/api";
+import { LiveModeModal } from "@/components/LiveModeModal";
 
 interface Settings {
   accountSizeUsd: number;
@@ -27,7 +28,12 @@ interface ProviderRow {
 export default function SettingsPage() {
   const settings = useSWR<Settings>("/api/settings", fetcher);
   const providers = useSWR<ProviderRow[]>("/api/providers", fetcher);
+  const broker = useSWR<{ connected: boolean; mode: string; host: string; port: number }>(
+    "/api/positions/broker/status",
+    fetcher,
+  );
   const [keyDraft, setKeyDraft] = useState<Record<string, string>>({});
+  const [liveModalOpen, setLiveModalOpen] = useState(false);
 
   async function saveSettings(patch: Partial<Settings>) {
     await api("/api/settings", { method: "PATCH", body: JSON.stringify(patch) });
@@ -91,7 +97,14 @@ export default function SettingsPage() {
               <select
                 className="input"
                 value={settings.data.ibkrMode}
-                onChange={(e) => saveSettings({ ibkrMode: e.target.value })}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next === "live" && settings.data?.ibkrMode !== "live") {
+                    setLiveModalOpen(true);
+                    return;
+                  }
+                  void saveSettings({ ibkrMode: next });
+                }}
               >
                 <option value="paper">Paper</option>
                 <option value="live">Live</option>
@@ -144,6 +157,15 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <LiveModeModal
+        open={liveModalOpen}
+        onClose={() => setLiveModalOpen(false)}
+        onConfirmed={() => {
+          void settings.mutate();
+          void broker.mutate();
+        }}
+      />
     </div>
   );
 }

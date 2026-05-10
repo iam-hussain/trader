@@ -26,7 +26,6 @@ const OptionLegInput = z.object({
 
 export const StageOrderInputSchema = z
   .object({
-    userId: z.string().min(1),
     signalId: z.string().optional(),
     ticker: z
       .string()
@@ -59,20 +58,26 @@ export class BrokerError extends Error {
   }
 }
 
+export interface OpenPositionsResult {
+  positions: Position[];
+  asOf: string;
+  source: "broker" | "cache";
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────
 
 /** Pure mapping from a Signal row to the BracketOrder the broker expects. */
 export function mapSignalToBracket(signal: Signal): BracketOrder {
   const side: "buy" | "sell" = signal.direction === "long" ? "buy" : "sell";
-  const base = {
+  const base: BracketOrder = {
     symbol: signal.ticker,
     side,
     qty: signal.qty,
-    entryType: "limit" as const,
+    entryType: "limit",
     entryPrice: signal.entry,
     takeProfit: signal.target1,
     stopLoss: signal.stop,
-    tif: "DAY" as const,
+    tif: "DAY",
   };
   if (signal.instrument === "option" && signal.optionLeg && typeof signal.optionLeg === "object") {
     const leg = signal.optionLeg as {
@@ -83,18 +88,19 @@ export function mapSignalToBracket(signal: Signal): BracketOrder {
     };
     const right: "C" | "P" =
       leg.right ?? (leg.type === "put" ? "P" : "C");
-    const expiry = leg.expiry ?? "";
-    const strike = leg.strike ?? 0;
     return {
       ...base,
-      option: { expiry, strike, right },
+      option: { expiry: leg.expiry ?? "", strike: leg.strike ?? 0, right },
     };
   }
   return base;
 }
 
-/** Map a Trade row → BracketOrder (for manual / non-signal orders). */
-function mapTradeToBracket(trade: Trade, optionLeg?: BracketOrder["option"]): BracketOrder {
+/** Map a Trade row → BracketOrder (manual / non-signal orders). */
+function mapTradeToBracket(
+  trade: Trade,
+  optionLeg?: BracketOrder["option"]
+): BracketOrder {
   const side: "buy" | "sell" = trade.side === "buy" ? "buy" : "sell";
   if (
     trade.entryPrice == null ||
@@ -120,13 +126,17 @@ function mapTradeToBracket(trade: Trade, optionLeg?: BracketOrder["option"]): Br
   return order;
 }
 
-async function getAdapter(): Promise<BrokerAdapter> {
-  return getBrokerAdapter({
+async function brokerAdapter(): Promise<BrokerAdapter> {
+  const adapter = getBrokerAdapter({
     host: env.IBKR_HOST,
     port: env.IBKR_PORT,
     clientId: env.IBKR_CLIENT_ID,
     mode: env.IBKR_MODE,
   });
+  if (!adapter.isConnected()) {
+    await adapter.connect();
+  }
+  return adapter;
 }
 
 /** Subscribe to an adapter's orderStatus stream and persist updates. */
@@ -136,7 +146,6 @@ function attachOrderListener(
   tradeId: string,
   brokerOrderId: string
 ): void {
-  // adapter is also an EventEmitter — guard for non-emitter adapters in tests.
   const emitter = adapter as unknown as {
     on?: (event: string, fn: (s: BrokerOrderStatus) => void) => void;
   };
@@ -148,9 +157,7 @@ function attachOrderListener(
       filledQty: status.filledQty,
     };
     if (status.avgFillPrice != null) data.entryPrice = status.avgFillPrice;
-    if (status.status === "filled") {
-      data.openedAt = new Date();
-    }
+    if (status.status === "filled") data.openedAt = new Date();
     if (status.status === "cancelled" || status.status === "rejected") {
       data.closedAt = new Date();
     }
@@ -169,7 +176,7 @@ function attachOrderListener(
         data: status,
       });
     } catch {
-      /* swallow — listener must not crash the adapter */
+      /* listener must not crash the adapter */
     }
   };
   emitter.on("orderStatus", handler);
@@ -183,28 +190,30 @@ function attachOrderListener(
  *   2. raw: use the supplied fields verbatim.
  * In mode 1, updates Signal.status="staged".
  */
-export async function stageOrder(input: StageOrderInput): Promise<Trade> {
+export async function stageOrder(
+  userId: string,
+  input: StageOrderInput
+): Promise<Trade> {
   const parsed = StageOrderInputSchema.parse(input);
 
   if (parsed.signalId) {
+    const signalId = parsed.signalId;
     const trade = await prisma.$transaction(async (tx) => {
-      const signal = await tx.signal.findUnique({
-        where: { id: parsed.signalId! },
-      });
-      if (!signal) throw new Error(`signal ${parsed.signalId} not found`);
-      if (signal.userId !== parsed.userId) {
+      const signal = await tx.signal.findUnique({ where: { id: signalId } });
+      if (!signal) throw new Error(`signal ${signalId} not found`);
+      if (signal.userId !== userId) {
         throw new Error("signal does not belong to user");
       }
       const created = await tx.trade.create({
         data: {
-          userId: parsed.userId,
+          userId,
           signalId: signal.id,
           ticker: signal.ticker,
           side: signal.direction === "long" ? "buy" : "sell",
           qty: parsed.qty ?? signal.qty,
           entryPrice: parsed.entryPrice ?? signal.entry,
-          targetPrice: signal.target1,
-          stopPrice: signal.stop,
+          targetPrice: parsed.takeProfit ?? signal.target1,
+          stopPrice: parsed.stopLoss ?? signal.stop,
           brokerStatus: "staged",
           notes: parsed.notes ?? null,
           tags: [],
@@ -217,20 +226,19 @@ export async function stageOrder(input: StageOrderInput): Promise<Trade> {
       return created;
     });
 
-    // Best-effort: attach the floating journal entry.
     try {
-      await attachToTrade(trade.id, parsed.signalId);
+      await attachToTrade(trade.id, signalId);
     } catch {
       /* ignore journal binding errors */
     }
-    await publishOrderEvent(parsed.userId, { type: "order.staged", tradeId: trade.id });
+    await publishOrderEvent(userId, { type: "order.staged", tradeId: trade.id });
     return trade;
   }
 
-  // raw mode — guard already by zod refine
+  // raw mode — guarded by the zod refine
   const trade = await prisma.trade.create({
     data: {
-      userId: parsed.userId,
+      userId,
       ticker: parsed.ticker!,
       side: parsed.side!,
       qty: parsed.qty!,
@@ -242,7 +250,7 @@ export async function stageOrder(input: StageOrderInput): Promise<Trade> {
       tags: [],
     },
   });
-  await publishOrderEvent(parsed.userId, { type: "order.staged", tradeId: trade.id });
+  await publishOrderEvent(userId, { type: "order.staged", tradeId: trade.id });
   return trade;
 }
 
@@ -275,32 +283,27 @@ export async function confirmOrder(
 
   // Apply adjustedQty if the engine resized us.
   const finalQty = riskResult.adjustedQty ?? trade.qty;
-  const tradeForOrder: Trade =
-    finalQty === trade.qty ? trade : { ...trade, qty: finalQty };
 
   // 2. Build bracket. If linked signal is an option, carry the leg through.
   let bracket: BracketOrder;
+  let signal: Signal | null = null;
   if (trade.signalId) {
-    const signal = await prisma.signal.findUnique({
-      where: { id: trade.signalId },
-    });
+    signal = await prisma.signal.findUnique({ where: { id: trade.signalId } });
     if (!signal) throw new Error(`linked signal ${trade.signalId} missing`);
     bracket = mapSignalToBracket({ ...signal, qty: finalQty });
-    // Override prices from the (possibly user-tweaked) trade row.
     if (trade.entryPrice != null) bracket.entryPrice = trade.entryPrice;
     if (trade.targetPrice != null) bracket.takeProfit = trade.targetPrice;
     if (trade.stopPrice != null) bracket.stopLoss = trade.stopPrice;
   } else {
-    bracket = mapTradeToBracket(tradeForOrder);
+    bracket = mapTradeToBracket({ ...trade, qty: finalQty });
   }
 
   // 3. Send to broker.
-  const adapter = await getAdapter();
+  const adapter = await brokerAdapter();
   let status: BrokerOrderStatus;
   try {
     status = await adapter.placeBracket(bracket);
   } catch (err) {
-    // Rollback to staged so the user can retry.
     await prisma.trade.update({
       where: { id: tradeId },
       data: { brokerStatus: "staged" },
@@ -336,10 +339,9 @@ export async function confirmOrder(
     data: status,
   });
 
-  // If the linked signal exists, mark as filled-pending.
-  if (trade.signalId) {
+  if (signal) {
     await prisma.signal.update({
-      where: { id: trade.signalId },
+      where: { id: signal.id },
       data: { status: status.status === "filled" ? "filled" : "staged" },
     });
   }
@@ -355,7 +357,6 @@ export async function cancelOrder(
   if (!trade) throw new Error(`trade ${tradeId} not found`);
   if (trade.userId !== userId) throw new Error("trade does not belong to user");
   if (!trade.brokerOrderId) {
-    // Wasn't submitted — just mark staged → cancelled.
     await prisma.trade.update({
       where: { id: tradeId },
       data: { brokerStatus: "cancelled", closedAt: new Date() },
@@ -364,7 +365,7 @@ export async function cancelOrder(
     return;
   }
 
-  const adapter = await getAdapter();
+  const adapter = await brokerAdapter();
   await adapter.cancelOrder(trade.brokerOrderId);
   await prisma.trade.update({
     where: { id: tradeId },
@@ -373,9 +374,10 @@ export async function cancelOrder(
   await publishOrderEvent(userId, { type: "order.cancel", tradeId });
 }
 
-export async function cancelAll(userId: string): Promise<{ cancelled: number }> {
-  const adapter = await getAdapter();
-  const cancelled = await adapter.cancelAll();
+/** Cancel every working order for this user. Returns count cancelled. */
+export async function cancelAll(userId: string): Promise<number> {
+  const adapter = await brokerAdapter();
+  const brokerCount = await adapter.cancelAll();
   const open = await prisma.trade.findMany({
     where: {
       userId,
@@ -383,38 +385,37 @@ export async function cancelAll(userId: string): Promise<{ cancelled: number }> 
       closedAt: null,
     },
   });
-  await prisma.$transaction(
-    open.map((t) =>
-      prisma.trade.update({
-        where: { id: t.id },
-        data: { brokerStatus: "cancelled", closedAt: new Date() },
-      })
-    )
-  );
-  for (const t of open) {
-    await publishOrderEvent(userId, { type: "order.cancel", tradeId: t.id });
+  if (open.length > 0) {
+    await prisma.$transaction(
+      open.map((t) =>
+        prisma.trade.update({
+          where: { id: t.id },
+          data: { brokerStatus: "cancelled", closedAt: new Date() },
+        })
+      )
+    );
+    for (const t of open) {
+      await publishOrderEvent(userId, { type: "order.cancel", tradeId: t.id });
+    }
   }
-  return { cancelled: Math.max(cancelled, open.length) };
+  return Math.max(brokerCount, open.length);
 }
 
 /**
- * Flatten every live position by submitting opposite-side market orders.
- * Sized to fully close (abs(qty) of the broker position). Updates the
- * matching open Trade rows when we can find them.
+ * Flatten every live position with opposite-side market orders. Returns
+ * the count of positions for which a closing order was successfully sent.
  */
-export async function flattenAll(userId: string): Promise<{ closed: number }> {
-  const adapter = await getAdapter();
+export async function flattenAll(userId: string): Promise<number> {
+  const adapter = await brokerAdapter();
   const positions = await adapter.getPositions();
   let closed = 0;
   for (const pos of positions) {
     if (pos.qty === 0) continue;
     const closingSide: "buy" | "sell" = pos.qty > 0 ? "sell" : "buy";
     const qty = Math.abs(pos.qty);
-    // Synthesize a tight protective bracket. Take-profit and stop are set
-    // far apart with a market entry so the parent fires immediately and
-    // the OCA children act as paper protections; for a flatten we mostly
-    // care about the parent fill.
     const last = pos.marketPrice ?? pos.avgCost;
+    // OCA bracket children still required by adapter contract; pick wide
+    // bands so they never trigger before the parent market entry fills.
     const tp = closingSide === "sell" ? last * 0.5 : last * 1.5;
     const sl = closingSide === "sell" ? last * 1.5 : last * 0.5;
     const bracket: BracketOrder = {
@@ -428,17 +429,13 @@ export async function flattenAll(userId: string): Promise<{ closed: number }> {
     };
     try {
       const status = await adapter.placeBracket(bracket);
-      // Best-effort: locate matching open trade rows by ticker and mark closed.
       const matching = await prisma.trade.findMany({
         where: { userId, ticker: pos.symbol, closedAt: null },
       });
       for (const t of matching) {
         await prisma.trade.update({
           where: { id: t.id },
-          data: {
-            brokerStatus: "cancelled",
-            closedAt: new Date(),
-          },
+          data: { brokerStatus: "cancelled", closedAt: new Date() },
         });
         await publishOrderEvent(userId, {
           type: "order.cancel",
@@ -451,8 +448,12 @@ export async function flattenAll(userId: string): Promise<{ closed: number }> {
       /* keep iterating */
     }
   }
-  await publishPositionUpdate(userId, await adapter.getPositions());
-  return { closed };
+  try {
+    await publishPositionUpdate(userId, await adapter.getPositions());
+  } catch {
+    /* publish failure is not fatal */
+  }
+  return closed;
 }
 
 export async function listStagedOrders(userId: string): Promise<Trade[]> {
@@ -470,19 +471,32 @@ export async function listStagedOrders(userId: string): Promise<Trade[]> {
  * Live positions when the broker is connected; falls back to a Trade-row
  * derived view when disconnected so the UI never goes blank.
  */
-export async function listOpenPositions(userId: string): Promise<Position[]> {
+export async function listOpenPositions(
+  userId: string
+): Promise<OpenPositionsResult> {
+  const asOf = new Date().toISOString();
   try {
-    const adapter = await getAdapter();
+    const adapter = getBrokerAdapter({
+      host: env.IBKR_HOST,
+      port: env.IBKR_PORT,
+      clientId: env.IBKR_CLIENT_ID,
+      mode: env.IBKR_MODE,
+    });
     if (adapter.isConnected()) {
       const positions = await adapter.getPositions();
-      return positions;
+      return { positions, asOf, source: "broker" };
     }
   } catch {
     /* fallthrough */
   }
-  // DB fallback.
+
+  // DB fallback: aggregate open trades by symbol.
   const open = await prisma.trade.findMany({
-    where: { userId, closedAt: null, brokerStatus: { in: ["submitted", "filled", "partial"] } },
+    where: {
+      userId,
+      closedAt: null,
+      brokerStatus: { in: ["submitted", "filled", "partial"] },
+    },
   });
   const bySymbol = new Map<string, Position>();
   for (const t of open) {
@@ -491,7 +505,6 @@ export async function listOpenPositions(userId: string): Promise<Position[]> {
     const filled = t.filledQty || signed;
     const existing = bySymbol.get(symbol);
     if (existing) {
-      // Weighted-avg cost.
       const totalQty = existing.qty + filled;
       if (totalQty !== 0 && t.entryPrice != null) {
         existing.avgCost =
@@ -506,5 +519,6 @@ export async function listOpenPositions(userId: string): Promise<Position[]> {
       });
     }
   }
-  return Array.from(bySymbol.values()).filter((p) => p.qty !== 0);
+  const positions = Array.from(bySymbol.values()).filter((p) => p.qty !== 0);
+  return { positions, asOf, source: "cache" };
 }

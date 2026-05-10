@@ -1,8 +1,11 @@
 "use client";
+import { useState } from "react";
 import { Check, X, Pencil } from "lucide-react";
 import { ConfBar } from "./ConfBar";
+import { stageOrder } from "@/lib/orders";
 
 export interface SignalCardProps {
+  signalId?: string;
   ticker: string;
   name?: string;
   direction: "long" | "short" | "hedge" | "wait";
@@ -59,6 +62,7 @@ function levelPos(value: number, min: number, max: number) {
 }
 
 export function SignalCard({
+  signalId,
   ticker,
   name,
   direction,
@@ -84,6 +88,30 @@ export function SignalCard({
   onSkip,
   onEdit,
 }: SignalCardProps) {
+  const [stageBusy, setStageBusy] = useState(false);
+  const [stageDone, setStageDone] = useState(false);
+  const [stageErr, setStageErr] = useState<string | null>(null);
+
+  async function handleStage() {
+    setStageErr(null);
+    if (!signalId) {
+      // Fall back to the parent callback — caller is responsible for staging.
+      onStage?.();
+      return;
+    }
+    setStageBusy(true);
+    try {
+      await stageOrder({ signalId });
+      setStageDone(true);
+      onStage?.();
+    } catch (e) {
+      setStageErr(e instanceof Error ? e.message : "Stage failed");
+    } finally {
+      setStageBusy(false);
+    }
+  }
+
+  const isStaged = staged || stageDone;
   const allLevels = [entry, target1, stop, ...(target2 !== undefined ? [target2] : [])];
   const min = Math.min(...allLevels);
   const max = Math.max(...allLevels);
@@ -225,17 +253,22 @@ export function SignalCard({
               <X className="w-3 h-3" /> Skip
             </button>
           )}
-          {staged ? (
+          {isStaged ? (
             <button className="btn btn-sm" disabled>
               <Check className="w-3 h-3" /> Staged
             </button>
           ) : (
-            <button className="btn btn-primary btn-sm" onClick={onStage}>
-              Stage
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => void handleStage()}
+              disabled={stageBusy}
+            >
+              {stageBusy ? "Staging…" : "Stage"}
             </button>
           )}
         </div>
       </div>
+      {stageErr && <div className="t-neg text-[11px] mt-1">{stageErr}</div>}
     </div>
   );
 }

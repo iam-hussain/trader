@@ -505,7 +505,7 @@ export function buildContract(order: BracketOrder): Contract {
       currency: "USD",
       lastTradeDateOrContractMonth: order.option.expiry.replace(/-/g, ""),
       strike: order.option.strike,
-      right: order.option.right,
+      right: order.option.right as Contract["right"],
       multiplier: "100",
     };
   }

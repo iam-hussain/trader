@@ -1,18 +1,22 @@
 import type { Position } from "@trader/brokers";
 import { connection } from "../jobs/queue.js";
 
-export type OrderEventType =
-  | "order.staged"
-  | "order.confirmed"
-  | "order.fill"
-  | "order.cancel"
-  | "order.reject"
-  | "order.update";
+/**
+ * Loose union of order-event types. The order-service emits high-level
+ * lifecycle markers (order.staged|confirmed|fill|cancel|reject|update);
+ * positions-publisher emits broker-side echoes (order.filled|cancelled|
+ * rejected|execution|update). The SSE consumer treats these as opaque
+ * strings, so we widen the type to `string` rather than dropping types.
+ */
+export type OrderEventType = string;
 
 export interface OrderEvent {
   type: OrderEventType;
   tradeId: string;
+  /** Optional structured payload (broker status, error, etc.). */
   data?: unknown;
+  /** Free-form fields callers may attach (brokerOrderId, status, …). */
+  [extra: string]: unknown;
 }
 
 function userChannel(userId: string): string {

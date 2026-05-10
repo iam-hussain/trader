@@ -1,43 +1,29 @@
 import { IbkrAdapter, type IbkrConfig, type Logger } from "./ibkr.js";
 
 let _adapter: IbkrAdapter | null = null;
-let _connectPromise: Promise<IbkrAdapter> | null = null;
 
 /**
- * Process-wide singleton. The first caller wins config; subsequent calls
- * receive the same instance regardless of the config they pass. Connect
- * is performed lazily and reused across concurrent first callers.
+ * Process-wide singleton. Returns the same IbkrAdapter instance for the
+ * lifetime of the process; callers manage `connect()` / `isConnected()`
+ * explicitly. The first caller's config is what the instance uses; later
+ * calls receive the same instance regardless of any new config passed.
  */
 export function getBrokerAdapter(
   config: IbkrConfig,
   logger: Logger | null = null
-): Promise<IbkrAdapter> {
-  if (_adapter && _adapter.isConnected()) {
-    return Promise.resolve(_adapter);
-  }
-  if (_connectPromise) return _connectPromise;
-  if (!_adapter) _adapter = new IbkrAdapter(config, logger);
-  const adapter = _adapter;
-  _connectPromise = adapter
-    .connect()
-    .then(() => adapter)
-    .catch((err) => {
-      _connectPromise = null;
-      throw err;
-    });
-  return _connectPromise;
+): IbkrAdapter {
+  if (_adapter) return _adapter;
+  _adapter = new IbkrAdapter(config, logger);
+  return _adapter;
 }
 
-/** Test helper: disconnect and clear the singleton. */
-export async function resetBrokerAdapter(): Promise<void> {
+/** Test helper: disconnect (best-effort, fire-and-forget) and clear the singleton. */
+export function resetBrokerAdapter(): void {
   const adapter = _adapter;
   _adapter = null;
-  _connectPromise = null;
   if (adapter) {
-    try {
-      await adapter.disconnect();
-    } catch {
+    adapter.disconnect().catch(() => {
       /* swallow */
-    }
+    });
   }
 }
