@@ -1,0 +1,38 @@
+{
+  "name": "@trader/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^9.4.0",
+    "@fastify/cors": "^10.0.0",
+    "@fastify/jwt": "^9.0.0",
+    "@fastify/sensible": "^6.0.0",
+    "@trader/brokers": "workspace:*",
+    "@trader/db": "workspace:*",
+    "@trader/llm": "workspace:*",
+    "@trader/schemas": "workspace:*",
+    "argon2": "^0.41.0",
+    "bullmq": "^5.20.0",
+    "fastify": "^5.0.0",
+    "ioredis": "^5.4.0",
+    "pino-pretty": "^11.2.0",
+    "undici": "^6.20.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

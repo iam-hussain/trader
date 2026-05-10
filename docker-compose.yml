@@ -1,0 +1,96 @@
+# Trader Daily — local stack
+# Phase 1: mongo + redis + api + web + quant. Ollama is opt-in via profile.
+#   docker compose up -d                         # core stack
+#   docker compose --profile ollama up -d        # include local LLM
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-trader}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-trader}
+    volumes:
+      - mongo_data:/data/db
+    # Mongo replica set is required by Prisma for transactions. We use a
+    # single-node RS to keep local dev simple.
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: |
+        echo 'try { rs.status().ok } catch(e) { rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}).ok }' \
+          | mongosh --quiet -u "$$MONGO_INITDB_ROOT_USERNAME" -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-4000}:4000"
+    env_file: .env
+    environment:
+      MONGO_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME:-trader}:${MONGO_INITDB_ROOT_PASSWORD:-trader}@mongo:27017/trader?authSource=admin&directConnection=true
+      REDIS_URL: redis://redis:6379
+      QUANT_PUBLIC_URL: http://quant:8000
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-4000}
+    depends_on:
+      - api
+
+  quant:
+    build:
+      context: ./apps/quant
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${QUANT_PORT:-8000}:8000"
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  mongo_data:
+  redis_data:
+  ollama_data:

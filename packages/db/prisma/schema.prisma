@@ -1,0 +1,206 @@
+// Trader Daily — application state (Mongo). OHLCV/timeseries lives in DuckDB+Parquet.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGO_URL")
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  watchlists   Watchlist[]
+  signals      Signal[]
+  trades       Trade[]
+  journal      JournalEntry[]
+  settings     Setting?
+  apiKeys      ApiKey[]
+  briefs       Brief[]
+  alerts       Alert[]
+}
+
+model Watchlist {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  name      String
+  tickers   String[]
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
+}
+
+/// Cached static info for a ticker (sector, industry, name).
+model Ticker {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  symbol    String   @unique
+  name      String?
+  exchange  String?
+  sector    String?
+  industry  String?
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+/// LLM-produced trade idea before it becomes a Trade.
+model Signal {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  briefId      String?  @db.ObjectId
+  ticker       String
+  direction    String   // "long" | "short"
+  instrument   String   // "stock" | "option"
+  entry        Float
+  target1      Float
+  target2      Float?
+  stop         Float
+  qty          Int
+  riskReward   Float
+  confidence   Float    // 0..1
+  holdPeriod   String   // "intraday" | "swing" | "position"
+  thesis       String
+  signals      String[] // technical signals fired
+  catalysts    String[]
+  invalidation String?
+  optionLeg    Json?
+  llmProvider  String   // which LLM produced it
+  llmModel     String
+  status       String   @default("proposed") // proposed | staged | filled | rejected | expired
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime?
+  user         User     @relation(fields: [userId], references: [id])
+  brief        Brief?   @relation(fields: [briefId], references: [id])
+  trade        Trade?
+
+  @@index([userId, createdAt])
+  @@index([ticker, status])
+}
+
+/// An order that has been (or will be) sent to the broker.
+model Trade {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @db.ObjectId
+  signalId      String?  @unique @db.ObjectId
+  ticker        String
+  side          String   // "buy" | "sell"
+  qty           Int
+  entryPrice    Float?
+  exitPrice     Float?
+  stopPrice     Float?
+  targetPrice   Float?
+  brokerOrderId String?
+  brokerStatus  String?  // submitted | filled | partial | cancelled | rejected
+  filledQty     Int      @default(0)
+  pnl           Float?
+  fees          Float?
+  notes         String?
+  tags          String[]
+  openedAt      DateTime @default(now())
+  closedAt      DateTime?
+  user          User     @relation(fields: [userId], references: [id])
+  signal        Signal?  @relation(fields: [signalId], references: [id])
+  journal       JournalEntry?
+
+  @@index([userId, openedAt])
+}
+
+model JournalEntry {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  tradeId     String?  @unique @db.ObjectId
+  date        DateTime
+  thesis      String?
+  outcome     String?  // "win" | "loss" | "scratch"
+  lessons     String?
+  screenshots String[] // file paths or URLs
+  tags        String[]
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  trade       Trade?   @relation(fields: [tradeId], references: [id])
+
+  @@index([userId, date])
+}
+
+/// One-row-per-user user settings doc.
+model Setting {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String   @unique @db.ObjectId
+  accountSizeUsd        Float    @default(25000)
+  maxRiskPerTradePct    Float    @default(1.0)
+  maxDailyLossPct       Float    @default(3.0)
+  maxTradesPerDay       Int      @default(5)
+  defaultInstruments    String[] @default(["stock", "option"])
+  defaultHoldPeriod     String   @default("swing")
+  blackoutMacroEvents   Boolean  @default(true)
+  blackoutMinutes       Int      @default(30)
+  defaultLlmProvider    String   @default("anthropic")
+  defaultLlmModel       String?
+  ibkrMode              String   @default("paper") // paper | live
+  ibkrHost              String   @default("127.0.0.1")
+  ibkrPort              Int      @default(7497)
+  theme                 String   @default("dark")
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id])
+}
+
+/// Encrypted at rest (envelope encryption — see api/src/services/crypto.ts).
+model ApiKey {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  provider   String   // "anthropic" | "openai" | "google" | "fred" | ...
+  ciphertext String   // base64 encrypted
+  iv         String
+  lastFour   String?  // hint for UI
+  validated  Boolean  @default(false)
+  validatedAt DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, provider])
+}
+
+/// A scheduled or on-demand brief (pre/mid/post-market).
+model Brief {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  date        DateTime
+  session     String   // "premarket" | "midday" | "postmarket"
+  status      String   @default("pending") // pending | running | done | error
+  summary     String?
+  marketRegime String? // "risk-on" | "neutral" | "risk-off"
+  context     Json?
+  llmProvider String?
+  llmModel    String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  signals     Signal[]
+
+  @@unique([userId, date, session])
+  @@index([userId, date])
+}
+
+model Alert {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  ticker    String
+  kind      String   // "price" | "iv" | "news" | "breakout"
+  rule      Json
+  enabled   Boolean  @default(true)
+  lastFired DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, ticker])
+}

@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  @apply bg-bg-base text-fg font-sans antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.card {
+  @apply bg-bg-surface border border-border rounded-lg;
+}
+.btn {
+  @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border
+         text-sm hover:bg-bg-elevated transition-colors;
+}
+.btn-primary {
+  @apply bg-accent text-white border-accent hover:bg-accent-hover;
+}
+.input {
+  @apply bg-bg-elevated border border-border rounded-md px-3 py-1.5 text-sm
+         outline-none focus:border-accent;
+}
