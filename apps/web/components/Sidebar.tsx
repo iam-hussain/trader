@@ -6,6 +6,7 @@ import {
   Newspaper,
   ArrowRightLeft,
   BookOpen,
+  Bell,
   Star,
   LineChart,
   FlaskConical,
@@ -30,6 +31,7 @@ const SECTIONS: { name: string; items: NavItem[] }[] = [
       { id: "briefs", label: "Briefs", href: "/briefs", icon: Newspaper, shortcut: "g b" },
       { id: "orders", label: "Orders", href: "/orders", icon: ArrowRightLeft, shortcut: "g o" },
       { id: "journal", label: "Journal", href: "/journal", icon: BookOpen, shortcut: "g j" },
+      { id: "alerts", label: "Alerts", href: "/alerts", icon: Bell, shortcut: "g a" },
     ],
   },
   {

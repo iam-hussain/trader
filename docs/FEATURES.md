@@ -18,7 +18,8 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 | Multiple named watchlists | ✅ | per-user; unique by name |
 | Add / remove tickers | ✅ | symbol regex validated |
 | Drag-to-reorder | ⏳ | Phase 2/3 UI polish |
-| Per-ticker alerts (price / IV / news / breakout) | ⏳ | Phase 3 |
+| Per-ticker alerts CRUD (price / IV / news / breakout) | 🟡 | Phase 3 — alerts page + worker stub |
+| Watchlist alert evaluator (real triggers + push delivery) | ⏳ | Phase 3+ |
 
 ## Ticker detail page (`/ticker/:symbol`)
 
@@ -45,12 +46,12 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Brief CRUD endpoints | ✅ | `/api/briefs` |
-| Manual "Run Morning Brief" CTA | 🟡 | endpoint stub, real generation in P3 |
-| Scheduled briefs at 08:00 / 12:00 / 16:30 ET | ⏳ | BullMQ in P3 |
-| Per-ticker signal cards | ⏳ | Phase 3 |
-| Macro context strip (VIX, SPY, QQQ, yields, regime) | ⏳ | Phase 3 |
-| Earnings + econ calendar sidebar | ⏳ | Phase 3 |
-| Re-run brief with different LLM | ⏳ | Phase 3 |
+| Manual "Run Morning Brief" CTA | 🟡 | Phase 3 — wired via /generate + RunBriefDialog |
+| Scheduled briefs at 08:00 / 12:00 / 16:30 ET | 🟡 | Phase 3 — BullMQ cron jobs |
+| Per-ticker signal cards | 🟡 | Phase 3 — SignalCard component |
+| Macro context strip (VIX, SPY, QQQ, yields, regime) | ✅ | renders on dashboard + brief detail |
+| Earnings + econ calendar sidebar | ⏳ | Phase 3+ |
+| Re-run brief with different LLM | 🟡 | Phase 3 — provider override on /generate |
 
 ## Trade signal & risk engine (Phase 3)
 
@@ -58,14 +59,16 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 | --- | --- | --- |
 | `TradeSignal` Zod schema (entry/target/stop/qty/R:R/confidence/thesis/etc) | ✅ | with directional consistency checks |
 | LLM `completeStructured` with TradeSignal schema | ✅ | provider-agnostic |
-| Signal engine orchestration (assemble bundle, prompt LLM, validate) | ⏳ | Phase 3 |
-| Risk engine — ATR-based stops | ⏳ | Phase 3 |
-| Risk engine — fixed-fractional sizing | ⏳ | Phase 3 |
-| Risk engine — capped Kelly | ⏳ | Phase 3 |
-| Risk engine — max-trades-per-day cap | ⏳ | Phase 3 |
-| Risk engine — max-daily-loss cap | ⏳ | Phase 3 |
-| Risk engine — FOMC/CPI/NFP/PCE blackout windows | ⏳ | Phase 3 |
-| Risk engine — sector / beta concentration limits | ⏳ | Phase 3 |
+| Signal engine orchestration (assemble bundle, prompt LLM, validate) | 🟡 | Phase 3 in progress |
+| Risk engine — fixed-fractional sizing | 🟡 | Phase 3 in progress |
+| Risk engine — capped Kelly variant (confidence-weighted) | 🟡 | Phase 3 in progress |
+| Risk engine — max-trades-per-day cap | 🟡 | Phase 3 in progress |
+| Risk engine — max-daily-loss cap | 🟡 | Phase 3 in progress |
+| Risk engine — FOMC/CPI/NFP/PCE blackout windows | 🟡 | Phase 3 in progress |
+| BullMQ scheduled briefs (08:00 / 12:00 / 16:30 ET) | 🟡 | Phase 3 in progress |
+| Manual brief trigger via /generate endpoint | 🟡 | Phase 3 in progress |
+| Server-Sent Events stream (briefs / orders / alerts) | 🟡 | Phase 3 in progress |
+| Risk engine — sector / beta concentration limits | ⏳ | Phase 3+ |
 | Server-side risk middleware (rejects orders regardless of UI) | ⏳ | Phase 4 |
 | Manual signal entry (user types a setup) | ⏳ | Phase 3 stretch |
 
@@ -87,10 +90,10 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Per-trade journal entry (thesis snapshot, lessons, tags) | ⏳ | Phase 3 |
-| Calendar heatmap of trading days (P/L) | ⏳ | Phase 3 |
-| Screenshot drop zone | ⏳ | Phase 3 |
-| Tag filters | ⏳ | Phase 3 |
+| Per-trade journal entry (thesis snapshot, lessons, tags) | 🟡 | Phase 3 — auto-snapshot on signal accept, manual edit |
+| Calendar heatmap of trading days (P/L) | 🟡 | Phase 3 — `/api/journal/heatmap` + CalendarHeatmap component |
+| Screenshot drop zone | ⏳ | Phase 3+ |
+| Tag filters | 🟡 | Phase 3 — query params on /api/journal |
 | Quarterly edge analysis (P/L by setup tag) | ⏳ | Phase 3+ |
 
 ## Forecast & backtest (Phase 5)

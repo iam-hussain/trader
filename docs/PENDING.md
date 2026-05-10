@@ -20,40 +20,41 @@ here — keep the trail.
 - [ ] **Earnings calendar endpoint**: scrape Earnings Whispers / Investing.com.
 - [ ] **Econ calendar endpoint**: scrape Forex Factory.
 
-## Phase 3 (signal & risk) — to do
+## Phase 3 (signal & risk) — in progress
 
-- [ ] **Signal engine** (`apps/api/src/services/signal-engine.ts`):
-  - bundle assembly (analysis + macro + risk limits)
-  - prompt template with house style + JSON schema description
-  - `completeStructured(TradeSignalArray)` call
-  - per-signal Zod re-validation + price-vs-quote sanity check
-  - persistence: signals + brief link
-- [ ] **Risk engine** (`apps/api/src/services/risk-engine.ts`):
-  - ATR-based stop-distance
-  - fixed-fractional sizing
-  - capped Kelly (1/4 cap)
-  - max-trades/day enforcement
-  - max-daily-loss enforcement (live broker P/L)
-  - FOMC/CPI/PCE/NFP blackout windows
-  - sector + beta-basket concentration caps
-- [ ] **Scheduled briefs** via BullMQ:
-  - 08:00 ET pre-market (full bundle)
-  - 12:00 ET mid-day (delta only)
-  - 16:30 ET post-market (review + tomorrow setups)
-- [ ] **Manual brief trigger** wired to dashboard CTA (replace stub job in
-      `apps/api/src/routes/brief.ts`).
-- [ ] **LLM provider re-run** chip in brief detail page — fires a new brief
-      with a different model and stores both for comparison.
-- [ ] **Trade journal**:
-  - auto-create entry on signal acceptance with thesis snapshot
-  - manual edit: outcome, lessons, screenshots, tags
-  - calendar heatmap
-- [ ] **Watchlist alerts**:
-  - price level
-  - IV change %
-  - news keyword
-  - breakout (close above N-day high)
-  - delivery via web SSE + Telegram + email channels (toggle per channel)
+Shipped (or in this commit batch):
+- [x] **Signal engine** at `apps/api/src/services/signal-engine.ts` —
+      bundle assembly + prompt + `completeStructured(TradeSignalArray)` +
+      Zod re-validation + price-vs-quote sanity check + persistence
+- [x] **Risk engine** at `apps/api/src/services/risk-engine.ts` —
+      fixed-fractional sizing + confidence-weighted (capped) Kelly +
+      max-trades/day + max-daily-loss + FOMC/CPI/NFP/PCE blackout
+- [x] **Macro events** at `apps/api/src/services/macro-events.ts` —
+      hardcoded calendar + `isInBlackout()` helper
+- [x] **BullMQ jobs** under `apps/api/src/jobs/` — queue setup, brief
+      worker, alert worker stub, recurring scheduler
+- [x] **Scheduled briefs** at 08:00 / 12:00 / 16:30 ET via cron
+- [x] **Manual brief trigger** through `POST /api/briefs/generate`
+      with LLM provider override
+- [x] **Brief job status polling** at `GET /api/briefs/jobs/:jobId`
+- [x] **Journal routes + heatmap** at `/api/journal/*`
+- [x] **Alerts CRUD** at `/api/alerts/*`
+- [x] **Server-Sent Events** stream at `GET /api/sse/events`
+- [x] **Web UI** — Briefs list + brief detail with `SignalCard`,
+      Journal calendar heatmap + entries, Alerts CRUD,
+      `RunBriefDialog` modal, `useUserEvents` SSE hook
+
+Remaining for Phase 3+ (carry-over):
+- [ ] **Real watchlist alert evaluator** (current worker is stub) — price
+      level / IV change / news keyword / breakout
+- [ ] **Sector + beta-basket concentration caps** in risk engine
+- [ ] **Telegram + SMTP delivery** of alerts
+- [ ] **Manual signal entry** (user types a setup, runs through risk engine)
+- [ ] **Brief delta view** for mid-day session — diff vs pre-market
+- [ ] **Macro calendar from a scraper** (Forex Factory / Investing.com)
+      to replace the hardcoded fallback
+- [ ] **Quarterly edge analysis** chart (P/L by setup tag)
+- [ ] **Screenshot drop zone** in journal entries
 
 ## Phase 4 (execution) — to do
 

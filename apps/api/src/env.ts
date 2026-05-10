@@ -20,6 +20,12 @@ const Env = z.object({
   IBKR_PORT: z.coerce.number().default(7497),
   IBKR_CLIENT_ID: z.coerce.number().default(42),
   IBKR_MODE: z.enum(["paper", "live"]).default("paper"),
+
+  // Phase 3 — set "false" to skip BullMQ worker startup (useful in tests)
+  JOBS_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
 });
 
 export const env = Env.parse(process.env);

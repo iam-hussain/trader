@@ -35,7 +35,7 @@ detail page, LLM provider switcher, quant service skeleton.
 
 ---
 
-## Phase 2 — Analysis engine 🟡 (current)
+## Phase 2 — Analysis engine ✅
 
 **Goal:** turn raw data into useful, reconciled, sentiment-aware analysis.
 
@@ -76,7 +76,7 @@ detail page, LLM provider switcher, quant service skeleton.
 
 ---
 
-## Phase 3 — Trade signal & risk engine ⏳
+## Phase 3 — Trade signal & risk engine 🟡 (current)
 
 **Goal:** turn analysis into validated trade ideas with hard risk discipline.
 
