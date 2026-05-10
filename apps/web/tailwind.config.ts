@@ -1,30 +1,56 @@
 import type { Config } from "tailwindcss";
 
+/**
+ * Tailwind is kept thin in this project — most styling lives in the global
+ * design tokens (./app/globals.css). The colors below are utility wrappers
+ * around the CSS custom properties so we can mix Tailwind utilities with the
+ * design-token classes.
+ */
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
-  darkMode: "class",
+  darkMode: ["class", '[data-theme="dark"]'],
   theme: {
     extend: {
       fontFamily: {
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ['"Geist"', "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ['"Geist Mono"', "ui-monospace", "monospace"],
       },
       colors: {
         bg: {
-          base: "rgb(10 12 16)",
-          surface: "rgb(17 20 26)",
-          elevated: "rgb(24 28 36)",
+          DEFAULT: "var(--bg)",
+          1: "var(--bg-elev-1)",
+          2: "var(--bg-elev-2)",
+          3: "var(--bg-elev-3)",
+          // legacy P1 aliases used by older components
+          base: "var(--bg)",
+          surface: "var(--bg-elev-1)",
+          elevated: "var(--bg-elev-2)",
         },
-        border: { DEFAULT: "rgb(38 44 56)", strong: "rgb(58 66 80)" },
+        border: {
+          DEFAULT: "var(--border)",
+          strong: "var(--border-strong)",
+        },
         fg: {
-          DEFAULT: "rgb(230 235 245)",
-          muted: "rgb(156 166 184)",
-          subtle: "rgb(108 118 134)",
+          DEFAULT: "var(--text)",
+          muted: "var(--text-muted)",
+          dim: "var(--text-dim)",
+          // legacy alias
+          subtle: "var(--text-dim)",
         },
-        accent: { DEFAULT: "rgb(80 140 255)", hover: "rgb(110 160 255)" },
-        pos: "rgb(60 200 130)",
-        neg: "rgb(240 90 100)",
-        warn: "rgb(240 180 60)",
+        primary: "var(--primary)",
+        success: "var(--success)",
+        danger: "var(--danger)",
+        warning: "var(--warning)",
+        destructive: "var(--destructive)",
+        // legacy aliases (used in older P1 code)
+        accent: "var(--primary)",
+        pos: "var(--success)",
+        neg: "var(--danger)",
+        warn: "var(--warning)",
+      },
+      borderRadius: {
+        DEFAULT: "var(--radius)",
+        lg: "var(--radius-lg)",
       },
     },
   },

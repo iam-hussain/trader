@@ -1,137 +1,129 @@
 # Trader Daily
 
-Personal daily trading helper for **US equities & options**. Runs locally via Docker Compose.
-Pulls free market + news + options data, runs analysis, asks an LLM
-(Claude / GPT / Gemini / local Ollama — switchable) to produce structured trade
-ideas with entry/target/stop/qty/risk, stages bracket orders to **Interactive
-Brokers**, and lets you fire them with one-click confirm.
+A personal **daily trading helper** for US equities & options. Runs locally
+via Docker Compose. Pulls free market + news + options data, runs analysis,
+asks an LLM (Claude / GPT / Gemini / local Ollama — switchable) to produce
+structured trade ideas, stages bracket orders to **Interactive Brokers**, and
+lets you fire them with one-click confirm.
 
-> Status: **Phase 1 — Foundation.** Auth, watchlists, settings, ticker detail,
-> LLM provider switcher, Python quant service with quote / news / options
-> endpoints. Phase 2+ adds analysis, signal engine, broker execution,
-> forecasting, backtest. See [the plan](./PLAN.md) for the full roadmap.
+> **Status: Phase 2 — Analysis engine.** Phase 1 (foundation) shipped. Phase 2
+> wires scrapers, options analytics, technical indicators, and news sentiment.
+> Phase 3 brings the LLM signal engine + risk engine. Phase 4 brings IBKR
+> execution. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+## Documentation
+
+The repo doubles as the living spec. Start here:
+
+| Doc | What |
+| --- | --- |
+| [`docs/IDEOLOGY.md`](docs/IDEOLOGY.md) | Why this exists. Principles. What we won't do. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System diagram, services, data flow. |
+| [`docs/FEATURES.md`](docs/FEATURES.md) | Full feature catalog — shipped / in-progress / planned. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phases 1-5, deliverables, verification. |
+| [`docs/PROCESS.md`](docs/PROCESS.md) | How this is being built (plan mode, agents, conventions). |
+| [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) | Every external source, free/paid, usage limits. |
+| [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Run, troubleshoot, common chores. |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model, key handling, broker safety. |
+| [`docs/PENDING.md`](docs/PENDING.md) | Concrete TODOs by phase. |
+| [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | Trading + project jargon. |
+| [`docs/design/`](docs/design/) | Static HTML design canvas — UI source of truth. |
 
 ## Stack
 
-- **Monorepo**: pnpm workspaces + Turborepo
-- **Web**: Next.js 15 + Tailwind + lucide-react (dark, dense, mono numerics)
-- **API**: Fastify + Prisma (MongoDB) + Auth.js-compatible JWT cookies
-- **Quant**: Python 3.11 + FastAPI + yfinance + pandas (DuckDB / Parquet for time-series)
-- **Cache / queue**: Redis + BullMQ
-- **LLM**: Vercel AI SDK (Anthropic / OpenAI / Google / Ollama)
-- **Broker**: Interactive Brokers via `@stoqey/ib` (Phase 4)
+- **Monorepo** — pnpm workspaces + Turborepo
+- **Web** — Next.js 15 + Tailwind + Geist + lucide-react
+- **API** — Fastify 5 + Prisma (Mongo) + cookie-JWT auth
+- **Quant** — Python 3.11 + FastAPI + yfinance + pandas + scipy
+- **DB** — Mongo (state) + DuckDB/Parquet (OHLCV)
+- **Cache / queue** — Redis + BullMQ
+- **LLM** — Vercel AI SDK across Anthropic / OpenAI / Google / Ollama
+- **Broker** — Interactive Brokers via `@stoqey/ib` (Phase 4)
 
 ## Repo layout
 
 ```
 apps/
-  web/    Next.js (port 3000)
-  api/    Fastify (port 4000)
-  quant/  FastAPI (port 8000)
+  web/    Next.js  (port 3000)
+  api/    Fastify  (port 4000)
+  quant/  FastAPI  (port 8000)
 packages/
   db/         Prisma + Mongo schema
-  schemas/    Zod (TradeSignal, RiskLimits, Brief, market types)
+  schemas/    Zod (TradeSignal, Brief, RiskLimits, market)
   llm/        provider abstraction
-  brokers/    BrokerAdapter + IbkrAdapter (stub in P1)
+  brokers/    BrokerAdapter + IbkrAdapter (P4)
   config/     tsconfig + eslint presets
-  ui/         shared UI (extracted in P2)
-data/parquet/  OHLCV cache (created on first run)
+  ui/         shared UI (extracted in P2+)
+data/parquet/  OHLCV cache
+docs/          ← read these
+docs/design/   ← static HTML mocks
 ```
 
 ## Quick start
 
-### Prereqs
-- Docker + Docker Compose v2
-- Node 20+, pnpm 9+ (only needed if running outside Docker)
-- Python 3.11+ (only needed if running quant service outside Docker)
-
-### Boot
 ```bash
 cp .env.example .env
-# edit .env — at minimum set NEXTAUTH_SECRET to a random 32+ char string
+# Set NEXTAUTH_SECRET to a random 32+ char string. Other keys can be added
+# later via the Settings page (encrypted in Mongo).
+
 docker compose up -d
-# generate Prisma client (first time only)
 docker compose exec api pnpm --filter @trader/db prisma:generate
 docker compose exec api pnpm --filter @trader/db prisma:push
+
+# Open http://localhost:3000, register an account, add a watchlist,
+# open /ticker/AAPL, see live quote + TradingView chart.
 ```
 
-Then open <http://localhost:3000>, register an account, add a watchlist.
+For more, see [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
 
-### Ports
-| Service | Port |
-| --- | --- |
-| web    | 3000 |
-| api    | 4000 |
-| quant  | 8000 |
-| mongo  | 27017 |
-| redis  | 6379 |
-| ollama | 11434 (only with `--profile ollama`) |
+## Free data sources (this is the whole point)
 
-### Local LLM (optional)
-```bash
-docker compose --profile ollama up -d
-docker compose exec ollama ollama pull llama3.1:8b
-```
+Reconciled across multiple free sources where possible:
 
-## What's required from you
+- **Quotes / fundamentals** — Yahoo Finance, Finviz, IBKR (Phase 4)
+- **News** — Yahoo, Finviz, Benzinga RSS, Google News, Reuters/MarketWatch RSS
+- **Put/call & options flow** — CBOE (market-wide), Yahoo (per-ticker),
+  NASDAQ.com, Barchart, OptionCharts.io, MarketChameleon — reconciled by
+  median across sources, with a disagreement flag
+- **Insider** — SEC EDGAR Form 4, OpenInsider
+- **Filings** — SEC EDGAR
+- **Macro** — FRED, US Treasury, CBOE VIX, Investing.com / Earnings
+  Whispers / Forex Factory calendars
 
-### Credentials (all optional in P1, fill what you have via Settings page)
-- `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY` — LLMs
-- `FRED_API_KEY` — yields, CPI macro data (free)
-- `NEWSAPI_KEY` — supplemental news (free tier)
-- `SEC_EDGAR_USER_AGENT` — required by SEC: `"Your Name your-email@domain.com"`
-- IBKR Gateway running locally on port 7497 (paper) or 7496 (live) — Phase 4
-
-### Trading preferences (Settings page)
-- Account size, max risk per trade %, max daily loss %, max trades per day
-- IBKR mode (paper / live), gateway host + port
-- Default LLM provider
-
-## Free data sources (Phase 1 + 2)
-
-**Quotes / OHLCV / Fundamentals**: Yahoo Finance (yfinance) · Stooq · Alpha Vantage · Finnhub · IBKR live data (P4)
-
-**News**: Yahoo · Finviz · Reuters/MarketWatch/Seeking Alpha/Benzinga RSS · Google News RSS · SEC EDGAR · NewsAPI
-
-**Put/Call & Options Flow** (reconciled across multiple sources):
-- CBOE — total + equity-only P/C ratio (official, daily CSV)
-- Yahoo Finance — per-ticker P/C from raw OI & volume
-- NASDAQ.com — per-ticker chains, IV, P/C
-- Barchart — per-ticker P/C, IV rank, max pain
-- OptionCharts.io — max pain, P/C, IV rank, GEX, skew
-- MarketChameleon — unusual options & P/C
-- OpenInsider — insider buys/sells
-- OpenBB Platform — open-source aggregator
-- CBOE VIX term structure & SKEW index
-
-**Macro / Calendar**: FRED · US Treasury · Investing.com / Earnings Whispers / Forex Factory · CNN Fear & Greed
-
-**Insider / Institutional**: SEC EDGAR Form 4 · OpenInsider · WhaleWisdom 13F
+See [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) for usage limits + how each
+is wired in.
 
 ## TradingView
 
-Essential plan exposes no API and no webhook alerts (webhooks need Pro+). The
-ticker detail page uses the **free TradingView Advanced Chart embed widget** —
-no subscription required. A `/api/webhooks/tradingview` endpoint is pre-wired
-so a future Pro+ upgrade routes alerts into the signal engine without code
-changes.
+Essential plan offers no programmatic value (no API, no webhooks below Pro+).
+We use the **free Advanced Chart embed widget** on the stock detail page and
+pre-wire `POST /api/webhooks/tradingview` for a future Pro+ upgrade.
 
-## Phase roadmap
+## What you need from yourself
 
-| Phase | Focus |
-| --- | --- |
-| 1 — Foundation | Monorepo, docker, auth, watchlists, settings, ticker detail, LLM provider switcher, quant service skeleton |
-| 2 — Analysis engine | Scrapers (CBOE / NASDAQ / Barchart / OptionCharts / SEC / OpenInsider), technicals, options analytics, news sentiment |
-| 3 — Signal & risk | LLM signal engine (Zod-enforced), risk engine (sizing / caps / blackouts), three scheduled briefs, journal |
-| 4 — Execution | IBKR TWS adapter, bracket order staging, one-click confirm, kill switch, server-side risk middleware |
-| 5 — Forecast & backtest | Prophet + ARIMA + GARCH, vectorbt, replay/sandbox mode, edge analysis |
+Everything optional except IBKR if you want execution. Set in Settings page:
 
-## Verification (Phase 1)
+- `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_API_KEY` — LLMs
+- `FRED_API_KEY` — yields, used by Greeks
+- `NEWSAPI_KEY` — supplemental news
+- `SEC_EDGAR_USER_AGENT` — `"Your Name your-email@domain.com"`
+- IBKR Gateway running locally on 7497 (paper) / 7496 (live), Phase 4
+- Telegram bot + SMTP for notifications, Phase 3
+- Account size + risk limits — see Settings → Risk
 
-- `docker compose up` brings everything healthy
-- `curl http://localhost:4000/healthz` → `{"ok":true,"service":"api"}`
-- `curl http://localhost:8000/healthz` → `{"ok":true,"service":"quant"}`
-- Open <http://localhost:3000>, register, log in
-- Add a watchlist, add a ticker (e.g. AAPL); persists in Mongo
-- Open `/ticker/AAPL` — see live price + TradingView chart
-- Settings → paste an LLM key → click Validate → expect green
+## Verification (Phase 1 + 2)
+
+```bash
+curl localhost:4000/healthz
+curl localhost:8000/healthz
+# After login (cookie):
+curl -b "trader_token=$TOKEN" localhost:4000/api/analysis/AAPL | jq .
+```
+
+The `/api/analysis/AAPL` response includes price, fundamentals, technicals
+(RSI/MACD/BB/EMAs/ATR/trend/signals), options snapshot with reconciled P/C
+across multiple sources, news with sentiment, insider trades, and filings.
+
+## License
+
+Personal use. No redistribution implied.

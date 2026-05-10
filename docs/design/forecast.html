@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Forecast — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .pat-row { padding: 10px 14px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 80px 1fr 80px 70px 70px; gap: 10px; align-items: center; font-size: 11px; }
+  .pat-row:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+    <div class="page" style="padding:16px 20px;">
+
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:24px;font-weight:600;letter-spacing:-0.02em;">SPY</span>
+            <span class="mono" style="font-size:18px;font-weight:500;">528.40</span>
+            <span class="mono t-pos" style="font-size:13px;">+0.42%</span>
+            <span class="chip">SPDR S&amp;P 500</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Forecasts · Prophet · ARIMA · GARCH · pattern recognition</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <input class="input mono" value="SPY" style="width:80px;text-transform:uppercase;" />
+          <div class="seg">
+            <button>1D</button>
+            <button class="active">5D</button>
+            <button>10D</button>
+            <button>30D</button>
+          </div>
+          <button class="btn btn-sm"><i data-lucide="history"></i> Replay mode</button>
+          <button class="btn btn-primary btn-sm"><i data-lucide="play"></i> Re-run <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">R</span></button>
+        </div>
+      </div>
+
+      <!-- Prophet chart -->
+      <div class="b-card" style="padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;">Prophet · 5-day forecast</div>
+          <span class="chip chip-info">80/95% CI bands</span>
+          <span class="chip">trained on 2y · 504 obs</span>
+          <div style="margin-left:auto;display:flex;gap:6px;font-size:10px;color:var(--text-muted);">
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--text);"></span>actual</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--primary);"></span>fcst</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:8px;background:color-mix(in oklab, var(--primary) 25%, transparent);"></span>95%</span>
+          </div>
+        </div>
+        <svg id="fc" viewBox="0 0 900 300" style="width:100%;height:300px;">
+          <!-- grid -->
+          <g stroke="var(--border)" stroke-width="0.5">
+            <line x1="40" y1="40" x2="40" y2="270"/>
+            <line x1="40" y1="270" x2="880" y2="270"/>
+            <line x1="40" y1="100" x2="880" y2="100" stroke-dasharray="2,4"/>
+            <line x1="40" y1="160" x2="880" y2="160" stroke-dasharray="2,4"/>
+            <line x1="40" y1="220" x2="880" y2="220" stroke-dasharray="2,4"/>
+          </g>
+          <!-- y labels -->
+          <g font-family="Geist Mono" font-size="10" fill="var(--text-muted)">
+            <text x="34" y="44" text-anchor="end">540</text>
+            <text x="34" y="104" text-anchor="end">532</text>
+            <text x="34" y="164" text-anchor="end">524</text>
+            <text x="34" y="224" text-anchor="end">516</text>
+            <text x="34" y="274" text-anchor="end">508</text>
+          </g>
+          <!-- forecast region shaded -->
+          <rect x="540" y="40" width="340" height="230" fill="color-mix(in oklab, var(--primary) 4%, transparent)" />
+          <line x1="540" y1="40" x2="540" y2="270" stroke="var(--primary)" stroke-width="0.5" stroke-dasharray="3,3"/>
+          <text x="544" y="54" font-family="Geist" font-size="10" fill="var(--primary)">forecast →</text>
+
+          <!-- 95 band -->
+          <path id="band95" fill="color-mix(in oklab, var(--primary) 18%, transparent)" stroke="none"/>
+          <!-- 80 band -->
+          <path id="band80" fill="color-mix(in oklab, var(--primary) 30%, transparent)" stroke="none"/>
+          <!-- actual line -->
+          <path id="actual" fill="none" stroke="var(--text)" stroke-width="1.6" stroke-linejoin="round"/>
+          <!-- forecast line -->
+          <path id="forecast" fill="none" stroke="var(--primary)" stroke-width="1.6" stroke-dasharray="4,3" stroke-linejoin="round"/>
+
+          <!-- x labels -->
+          <g font-family="Geist Mono" font-size="10" fill="var(--text-muted)">
+            <text x="80" y="288">Jan 8</text>
+            <text x="220" y="288">Jan 15</text>
+            <text x="360" y="288">Jan 22</text>
+            <text x="500" y="288">Jan 29</text>
+            <text x="640" y="288">Feb 5</text>
+            <text x="780" y="288">Feb 12</text>
+          </g>
+        </svg>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+          <div><div style="font-size:10px;color:var(--text-muted);">Spot</div><div class="mono" style="font-size:14px;font-weight:600;">528.40</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted);">5d fcst</div><div class="mono" style="font-size:14px;font-weight:600;color:var(--success);">532.10 <span style="font-size:10px;font-weight:400;">+0.70%</span></div></div>
+          <div><div style="font-size:10px;color:var(--text-muted);">95% range</div><div class="mono" style="font-size:14px;font-weight:600;">524.20 — 540.10</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted);">P(up &gt; 0.5%)</div><div class="mono" style="font-size:14px;font-weight:600;">62%</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted);">MAPE backtest</div><div class="mono" style="font-size:14px;font-weight:600;">0.84%</div></div>
+        </div>
+      </div>
+
+      <!-- ARIMA + GARCH + Patterns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 360px;gap:16px;">
+        <div class="b-card" style="padding:14px 16px;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">ARIMA(2,1,2) · point fcst <span class="chip" style="margin-left:auto;">order auto-selected</span></div>
+          <svg viewBox="0 0 400 140" style="width:100%;height:140px;">
+            <line x1="20" y1="120" x2="380" y2="120" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="20" y1="20" x2="20" y2="120" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="240" y1="20" x2="240" y2="120" stroke="var(--primary)" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <path d="M20,90 L40,86 L60,82 L80,80 L100,76 L120,72 L140,70 L160,72 L180,68 L200,64 L220,62 L240,58" fill="none" stroke="var(--text)" stroke-width="1.5"/>
+            <path d="M240,58 L260,55 L280,52 L300,50 L320,48 L340,46 L360,44" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'Geist Mono',monospace;margin-top:8px;color:var(--text-muted);">
+            <span>μ = +0.12% / day</span>
+            <span>σ = 0.78%</span>
+            <span>AIC 412.4</span>
+          </div>
+        </div>
+
+        <div class="b-card" style="padding:14px 16px;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">GARCH(1,1) · vol forecast <span class="chip" style="margin-left:auto;">5d horizon</span></div>
+          <svg viewBox="0 0 400 140" style="width:100%;height:140px;">
+            <line x1="20" y1="120" x2="380" y2="120" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="20" y1="20" x2="20" y2="120" stroke="var(--border)" stroke-width="0.5"/>
+            <line x1="240" y1="20" x2="240" y2="120" stroke="var(--warning)" stroke-width="0.5" stroke-dasharray="3,3"/>
+            <path d="M20,80 L40,75 L60,90 L80,70 L100,82 L120,60 L140,72 L160,55 L180,68 L200,50 L220,62 L240,48" fill="none" stroke="var(--warning)" stroke-width="1.5"/>
+            <path d="M240,48 L260,52 L280,56 L300,62 L320,68 L340,72 L360,76" fill="none" stroke="var(--warning)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>
+            <path d="M240,48 L260,40 L280,34 L300,30 L320,28 L340,26 L360,24 L360,68 L340,72 L320,76 L300,82 L280,86 L260,88 L240,88 Z" fill="color-mix(in oklab, var(--warning) 12%, transparent)"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'Geist Mono',monospace;margin-top:8px;color:var(--text-muted);">
+            <span>Realized: 11.2%</span>
+            <span class="t-warn">Fcst T+5: 13.8%</span>
+            <span>VIX: 14.8</span>
+          </div>
+        </div>
+
+        <div class="b-card" style="overflow:hidden;">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px;">Pattern recognition <span class="chip" style="margin-left:auto;">last 60d</span></div>
+          <div class="pat-row" style="grid-template-columns:80px 1fr 80px 70px 70px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;background:var(--bg-elev-1);">
+            <span>Pattern</span><span>Detected</span><span style="text-align:right;">N</span><span style="text-align:right;">Win%</span><span style="text-align:right;">Edge</span>
+          </div>
+          <div class="pat-row"><span style="font-weight:500;color:var(--text);font-size:12px;">Hammer</span><span class="t-muted">3 sessions ago</span><span class="mono" style="text-align:right;">42</span><span class="mono t-pos" style="text-align:right;">61%</span><span class="mono t-pos" style="text-align:right;">+0.8%</span></div>
+          <div class="pat-row"><span style="font-weight:500;color:var(--text);font-size:12px;">Bull engulf</span><span class="t-muted">Today</span><span class="mono" style="text-align:right;">28</span><span class="mono t-pos" style="text-align:right;">68%</span><span class="mono t-pos" style="text-align:right;">+1.2%</span></div>
+          <div class="pat-row"><span style="font-weight:500;color:var(--text);font-size:12px;">3-white</span><span class="t-muted">Yesterday</span><span class="mono" style="text-align:right;">14</span><span class="mono t-pos" style="text-align:right;">71%</span><span class="mono t-pos" style="text-align:right;">+1.6%</span></div>
+          <div class="pat-row"><span style="font-weight:500;color:var(--text);font-size:12px;">Doji</span><span class="t-muted">5d ago</span><span class="mono" style="text-align:right;">62</span><span class="mono" style="text-align:right;">52%</span><span class="mono" style="text-align:right;">+0.1%</span></div>
+          <div class="pat-row"><span style="font-weight:500;color:var(--text);font-size:12px;">Inside bar</span><span class="t-muted">2d ago</span><span class="mono" style="text-align:right;">48</span><span class="mono" style="text-align:right;">55%</span><span class="mono t-pos" style="text-align:right;">+0.3%</span></div>
+        </div>
+      </div>
+
+      <!-- Replay -->
+      <div class="b-card" style="padding:14px 16px;display:flex;align-items:center;gap:14px;background:linear-gradient(90deg, color-mix(in oklab, var(--warning) 6%, var(--bg-elev-1)), var(--bg-elev-1));border-color:color-mix(in oklab, var(--warning) 25%, var(--border));">
+        <i data-lucide="rewind" style="color:var(--warning);width:18px;height:18px;"></i>
+        <div style="flex:1;">
+          <div style="font-weight:500;font-size:13px;">Replay mode</div>
+          <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Re-run engine on a past date — what would the brief have said? Useful for backtesting LLM thesis quality.</div>
+        </div>
+        <input class="input mono" value="2025-08-04" style="width:140px;" />
+        <button class="btn btn-sm">Run</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('forecast', { crumbs: ['Markets', 'Forecast', 'SPY'] });
+
+  // Build prophet path
+  const w = 900, h = 300;
+  const xPast = (i) => 40 + (i / 60) * 500;
+  const xFut = (i) => 540 + (i / 5) * 340;
+  const yScale = (v) => 270 - ((v - 508) / 32) * 230;
+
+  // historical: random walk to ~528
+  let s = 17, hist = [], v = 510;
+  for (let i = 0; i <= 60; i++) {
+    s = (s * 9301 + 49297) % 233280;
+    v += (s / 233280 - 0.45) * 1.4;
+    hist.push(v);
+  }
+  // ensure ends near 528
+  const adj = (528.4 - hist[hist.length - 1]);
+  hist = hist.map((x, i) => x + adj * (i / hist.length));
+
+  const actualD = hist.map((y, i) => `${i === 0 ? 'M' : 'L'}${xPast(i).toFixed(1)},${yScale(y).toFixed(1)}`).join(' ');
+  document.getElementById('actual').setAttribute('d', actualD);
+
+  // forecast 5 days
+  const f = [528.4, 529.5, 530.4, 531.2, 531.8, 532.1];
+  const lo80 = [528.4, 527.8, 527.4, 527.0, 526.6, 526.2];
+  const hi80 = [528.4, 531.2, 533.0, 534.6, 536.0, 537.4];
+  const lo95 = [528.4, 526.4, 525.4, 524.6, 523.8, 524.2];
+  const hi95 = [528.4, 532.6, 534.8, 537.2, 539.0, 540.1];
+
+  const fcD = f.map((y, i) => `${i === 0 ? 'M' : 'L'}${xFut(i).toFixed(1)},${yScale(y).toFixed(1)}`).join(' ');
+  document.getElementById('forecast').setAttribute('d', fcD);
+
+  const band80D = hi80.map((y, i) => `${i === 0 ? 'M' : 'L'}${xFut(i).toFixed(1)},${yScale(y).toFixed(1)}`).join(' ') +
+    ' ' + lo80.slice().reverse().map((y, i) => `L${xFut(lo80.length - 1 - i).toFixed(1)},${yScale(y).toFixed(1)}`).join(' ') + ' Z';
+  document.getElementById('band80').setAttribute('d', band80D);
+
+  const band95D = hi95.map((y, i) => `${i === 0 ? 'M' : 'L'}${xFut(i).toFixed(1)},${yScale(y).toFixed(1)}`).join(' ') +
+    ' ' + lo95.slice().reverse().map((y, i) => `L${xFut(lo95.length - 1 - i).toFixed(1)},${yScale(y).toFixed(1)}`).join(' ') + ' Z';
+  document.getElementById('band95').setAttribute('d', band95D);
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

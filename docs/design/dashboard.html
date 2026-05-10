@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Today — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .grid-main { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+  .pos-row { display: grid; grid-template-columns: 70px 50px 50px 70px 70px 80px 60px 1fr; align-items: center; padding: 9px 12px; font-family: 'Geist Mono', monospace; font-size: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .pos-row:hover { background: var(--bg-elev-2); }
+  .pos-row:last-child { border-bottom: none; }
+  .brief-tile { background: var(--bg-elev-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 110px; cursor: pointer; transition: border-color 0.15s; }
+  .brief-tile:hover { border-color: var(--border-strong); }
+  .brief-tile.done { background: linear-gradient(180deg, color-mix(in oklab, var(--success) 6%, var(--bg-elev-1)), var(--bg-elev-1)); }
+  .brief-tile.live { border-color: color-mix(in oklab, var(--primary) 50%, var(--border)); }
+  .signal-mini { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .signal-mini:hover { background: var(--bg-elev-2); }
+  .wl-row { display: grid; grid-template-columns: 50px 1fr 70px 50px; align-items: center; padding: 7px 12px; font-size: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .wl-row:hover { background: var(--bg-elev-2); }
+  .ev-row { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 11px; }
+  .ev-row:last-child { border-bottom: none; }
+  .pcr-bg { background: var(--bg-elev-2); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+
+    <!-- Macro strip -->
+    <div class="macro-strip">
+      <div class="macro-item" style="background:color-mix(in oklab, var(--success) 10%, transparent);">
+        <span class="dot" style="background:var(--regime-on);"></span>
+        <span style="font-weight:600;">RISK-ON</span>
+        <span class="t-muted" style="font-size:10px;">regime</span>
+      </div>
+      <div class="macro-item"><span class="lbl">VIX</span><span class="mono">14.82</span><span class="mono t-pos">−2.1%</span></div>
+      <div class="macro-item"><span class="lbl">SPY</span><span class="mono">528.40</span><span class="mono t-pos">+0.42%</span></div>
+      <div class="macro-item"><span class="lbl">QQQ</span><span class="mono">452.18</span><span class="mono t-pos">+0.61%</span></div>
+      <div class="macro-item"><span class="lbl">10Y</span><span class="mono">4.31%</span><span class="mono t-neg">+3bp</span></div>
+      <div class="macro-item"><span class="lbl">DXY</span><span class="mono">104.21</span><span class="mono t-neg">+0.18%</span></div>
+      <div class="macro-item"><span class="lbl">GOLD</span><span class="mono">2,348</span><span class="mono t-pos">+0.27%</span></div>
+      <div class="macro-item"><span class="lbl">CRUDE</span><span class="mono">78.42</span><span class="mono t-neg">−0.84%</span></div>
+      <div class="macro-item"><span class="lbl">BTC</span><span class="mono">68,420</span><span class="mono t-pos">+1.4%</span></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 14px;font-size:11px;color:var(--text-muted);">
+        <span class="pulse-dot"></span> Live · 09:41:22 ET
+      </div>
+    </div>
+
+    <!-- Sector heatmap -->
+    <div class="heatmap" id="heatmap"></div>
+
+    <div class="page">
+
+      <!-- Hero CTA + briefs -->
+      <div style="display:grid;grid-template-columns:300px 1fr 1fr 1fr;gap:12px;">
+        <div class="b-card" style="padding:16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 18%, var(--bg-elev-1)), var(--bg-elev-1));border-color:color-mix(in oklab, var(--primary) 35%, var(--border));">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;">Wed · Jan 22 · 09:41 ET</div>
+          <div style="font-size:18px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;">Run morning brief</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">Scan 24 watchlist + premarket movers, run thesis through claude-sonnet-4.5.</div>
+          <div style="display:flex;gap:6px;margin-top:auto;">
+            <button class="btn btn-primary btn-lg" style="flex:1;justify-content:center;">
+              <i data-lucide="zap"></i> Run brief
+              <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;margin-left:auto;">g b</span>
+            </button>
+            <button class="btn btn-lg" aria-label="LLM provider"><i data-lucide="chevron-down"></i></button>
+          </div>
+        </div>
+
+        <div class="brief-tile done">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="chip chip-pos"><i data-lucide="check"></i> done</span>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:500;">PRE-MARKET</span>
+            <span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-dim);">08:00 ET</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text);">Megacap tech leading; semis bid on Foxconn deal. Watch SPY 530 pivot, NFP risk Fri.</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;">
+            <span class="chip chip-info"><i data-lucide="sparkles"></i> 6 setups</span>
+            <span class="chip">3 staged</span>
+          </div>
+        </div>
+
+        <div class="brief-tile live">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="chip chip-info"><span class="pulse-dot" style="background:var(--primary);"></span> next</span>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:500;">MID-DAY</span>
+            <span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-dim);">12:00 ET · in 2h 19m</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text-muted);">Re-evaluates open positions, scans for momentum continuation, flags overstretched moves.</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;">
+            <button class="btn btn-sm">Run early <span class="kbd">⇧M</span></button>
+            <span class="chip">auto-run on</span>
+          </div>
+        </div>
+
+        <div class="brief-tile">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="chip"><i data-lucide="moon"></i> queued</span>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:500;">POST-MARKET</span>
+            <span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-dim);">16:30 ET</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--text-muted);">Daily review: P/L, what worked, swing setups for tomorrow, journal prompts.</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;">
+            <span class="chip">incl. earnings recap</span>
+            <span class="chip">incl. tomorrow econ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main grid: signals + positions, sidebar -->
+      <div class="grid-main">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- Open positions -->
+          <div class="b-card">
+            <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);">
+              <div style="font-weight:600;font-size:13px;">Open positions</div>
+              <span class="chip" style="margin-left:8px;">5</span>
+              <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+                <span class="mono" style="font-size:11px;">Total: <span class="t-pos">+$1,284.40</span> <span class="t-muted">(+1.82%)</span></span>
+                <div class="seg">
+                  <button class="active">All</button>
+                  <button>Equities</button>
+                  <button>Options</button>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0;">
+              <div style="display:grid;grid-template-columns:70px 50px 50px 70px 70px 80px 60px 1fr;padding:8px 12px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);background:var(--bg-elev-1);">
+                <div>Ticker</div><div>Side</div><div class="r" style="text-align:right;">Qty</div><div class="r" style="text-align:right;">Entry</div><div class="r" style="text-align:right;">Last</div><div class="r" style="text-align:right;">$P/L</div><div class="r" style="text-align:right;">%</div><div></div>
+              </div>
+              <div class="pos-row"><span style="font-family:'Geist',sans;font-weight:600;">NVDA</span><span class="chip chip-pos" style="font-family:'Geist',sans;justify-self:start;height:18px;">LONG</span><span style="text-align:right;">25</span><span style="text-align:right;">912.10</span><span style="text-align:right;">938.42</span><span style="text-align:right;" class="t-pos">+658.00</span><span style="text-align:right;" class="t-pos">+2.88%</span><span id="s1" style="justify-self:end;"></span></div>
+              <div class="pos-row"><span style="font-family:'Geist',sans;font-weight:600;">AAPL</span><span class="chip chip-pos" style="font-family:'Geist',sans;justify-self:start;height:18px;">LONG</span><span style="text-align:right;">100</span><span style="text-align:right;">218.50</span><span style="text-align:right;">221.04</span><span style="text-align:right;" class="t-pos">+254.00</span><span style="text-align:right;" class="t-pos">+1.16%</span><span id="s2" style="justify-self:end;"></span></div>
+              <div class="pos-row"><span style="font-family:'Geist',sans;font-weight:600;">SPY</span><span class="chip" style="font-family:'Geist',sans;justify-self:start;height:18px;background:color-mix(in oklab, var(--primary) 12%, transparent);color:var(--primary);border-color:color-mix(in oklab, var(--primary) 30%, transparent);">P 525</span><span style="text-align:right;">2</span><span style="text-align:right;">3.20</span><span style="text-align:right;">1.85</span><span style="text-align:right;" class="t-neg">−270.00</span><span style="text-align:right;" class="t-neg">−42.19%</span><span id="s3" style="justify-self:end;"></span></div>
+              <div class="pos-row"><span style="font-family:'Geist',sans;font-weight:600;">MSFT</span><span class="chip chip-pos" style="font-family:'Geist',sans;justify-self:start;height:18px;">C 440</span><span style="text-align:right;">5</span><span style="text-align:right;">8.20</span><span style="text-align:right;">10.60</span><span style="text-align:right;" class="t-pos">+1,200.00</span><span style="text-align:right;" class="t-pos">+29.27%</span><span id="s4" style="justify-self:end;"></span></div>
+              <div class="pos-row"><span style="font-family:'Geist',sans;font-weight:600;">TSLA</span><span class="chip chip-neg" style="font-family:'Geist',sans;justify-self:start;height:18px;">SHORT</span><span style="text-align:right;">50</span><span style="text-align:right;">252.40</span><span style="text-align:right;">249.32</span><span style="text-align:right;" class="t-pos">+154.00</span><span style="text-align:right;" class="t-pos">+1.22%</span><span id="s5" style="justify-self:end;"></span></div>
+              <div class="pos-row"><span style="font-family:'Geist',sans;font-weight:600;">META</span><span class="chip chip-pos" style="font-family:'Geist',sans;justify-self:start;height:18px;">LONG</span><span style="text-align:right;">15</span><span style="text-align:right;">596.00</span><span style="text-align:right;">594.20</span><span style="text-align:right;" class="t-neg">−27.00</span><span style="text-align:right;" class="t-neg">−0.30%</span><span id="s6" style="justify-self:end;"></span></div>
+            </div>
+          </div>
+
+          <!-- Today's signals -->
+          <div class="b-card">
+            <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);">
+              <div style="font-weight:600;font-size:13px;">Today's signals</div>
+              <span class="chip" style="margin-left:8px;">6 active</span>
+              <span class="chip chip-info" style="margin-left:6px;"><i data-lucide="sparkles"></i> claude-sonnet-4.5</span>
+              <div style="margin-left:auto;display:flex;gap:6px;">
+                <div class="seg">
+                  <button class="active">All</button>
+                  <button>Long</button>
+                  <button>Short</button>
+                  <button>Options</button>
+                </div>
+                <button class="btn btn-sm"><i data-lucide="filter"></i> Filter</button>
+              </div>
+            </div>
+            <div>
+              <div class="signal-mini" style="display:grid;grid-template-columns:60px 70px 1fr 100px 80px 80px;align-items:center;gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:13px;">NVDA</span><span style="font-size:9px;color:var(--text-muted);">Nvidia Corp</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px;"><span class="chip chip-pos" style="justify-self:start;align-self:flex-start;">LONG</span><span class="chip" style="justify-self:start;align-self:flex-start;">CALL DEBIT</span></div>
+                <div style="font-size:11px;line-height:1.5;color:var(--text-muted);">Earnings drift continuation, RS leader vs SMH; entry on pullback to 20EMA.</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-muted);text-align:right;">
+                  <span>E</span><span>932.40</span><span>T</span><span class="t-pos">965.00</span><span>S</span><span class="t-neg">918.00</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+                  <span class="mono" style="font-size:11px;font-weight:600;">R:R 2.3</span>
+                  <div style="width:60px;"><div class="conf-bar"><span style="width:72%;"></span></div></div>
+                  <span class="mono" style="font-size:9px;color:var(--text-muted);">conf 72</span>
+                </div>
+                <button class="btn btn-primary btn-sm">Stage <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">S</span></button>
+              </div>
+
+              <div class="signal-mini" style="display:grid;grid-template-columns:60px 70px 1fr 100px 80px 80px;align-items:center;gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:13px;">SPY</span><span style="font-size:9px;color:var(--text-muted);">SPDR S&amp;P 500</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px;"><span class="chip chip-info" style="justify-self:start;align-self:flex-start;">HEDGE</span><span class="chip" style="justify-self:start;align-self:flex-start;">PUT 525/520</span></div>
+                <div style="font-size:11px;line-height:1.5;color:var(--text-muted);">Tail hedge ahead of NFP Fri; protects long book delta if VIX backs up &gt; 16.</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-muted);text-align:right;">
+                  <span>E</span><span>1.85</span><span>T</span><span class="t-pos">3.40</span><span>S</span><span class="t-neg">0.95</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+                  <span class="mono" style="font-size:11px;font-weight:600;">R:R 1.7</span>
+                  <div style="width:60px;"><div class="conf-bar"><span style="width:58%;"></span></div></div>
+                  <span class="mono" style="font-size:9px;color:var(--text-muted);">conf 58</span>
+                </div>
+                <button class="btn btn-primary btn-sm">Stage <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">S</span></button>
+              </div>
+
+              <div class="signal-mini" style="display:grid;grid-template-columns:60px 70px 1fr 100px 80px 80px;align-items:center;gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:13px;">TSLA</span><span style="font-size:9px;color:var(--text-muted);">Tesla Inc</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px;"><span class="chip chip-neg" style="justify-self:start;align-self:flex-start;">SHORT</span><span class="chip" style="justify-self:start;align-self:flex-start;">EQUITY</span></div>
+                <div style="font-size:11px;line-height:1.5;color:var(--text-muted);">Lower-high pattern, volume divergence on bounce; deliveries miss priced in.</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-muted);text-align:right;">
+                  <span>E</span><span>251.20</span><span>T</span><span class="t-pos">238.00</span><span>S</span><span class="t-neg">258.40</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+                  <span class="mono" style="font-size:11px;font-weight:600;">R:R 1.8</span>
+                  <div style="width:60px;"><div class="conf-bar"><span style="width:64%;"></span></div></div>
+                  <span class="mono" style="font-size:9px;color:var(--text-muted);">conf 64</span>
+                </div>
+                <button class="btn btn-primary btn-sm">Stage <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">S</span></button>
+              </div>
+
+              <div class="signal-mini" style="display:grid;grid-template-columns:60px 70px 1fr 100px 80px 80px;align-items:center;gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:13px;">AMD</span><span style="font-size:9px;color:var(--text-muted);">Adv Micro Devices</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px;"><span class="chip chip-pos" style="justify-self:start;align-self:flex-start;">LONG</span><span class="chip" style="justify-self:start;align-self:flex-start;">EQUITY</span></div>
+                <div style="font-size:11px;line-height:1.5;color:var(--text-muted);">Pre-earnings setup, IV rank 38, options unusually active in Feb 200 calls.</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-muted);text-align:right;">
+                  <span>E</span><span>184.20</span><span>T</span><span class="t-pos">198.00</span><span>S</span><span class="t-neg">178.40</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+                  <span class="mono" style="font-size:11px;font-weight:600;">R:R 2.4</span>
+                  <div style="width:60px;"><div class="conf-bar"><span style="width:68%;"></span></div></div>
+                  <span class="mono" style="font-size:9px;color:var(--text-muted);">conf 68</span>
+                </div>
+                <button class="btn btn-sm">Staged ✓</button>
+              </div>
+
+              <div class="signal-mini" style="display:grid;grid-template-columns:60px 70px 1fr 100px 80px 80px;align-items:center;gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:13px;">XOM</span><span style="font-size:9px;color:var(--text-muted);">Exxon Mobil</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px;"><span class="chip chip-warn" style="justify-self:start;align-self:flex-start;">WAIT</span><span class="chip" style="justify-self:start;align-self:flex-start;">EQUITY</span></div>
+                <div style="font-size:11px;line-height:1.5;color:var(--text-muted);">Crude weakness; wait for 110 reclaim before entry. Soft signal.</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-muted);text-align:right;">
+                  <span>E</span><span>110.40</span><span>T</span><span class="t-pos">116.00</span><span>S</span><span class="t-neg">107.80</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+                  <span class="mono" style="font-size:11px;font-weight:600;">R:R 2.1</span>
+                  <div style="width:60px;"><div class="conf-bar"><span style="width:42%;"></span></div></div>
+                  <span class="mono" style="font-size:9px;color:var(--text-muted);">conf 42</span>
+                </div>
+                <button class="btn btn-sm" style="opacity:0.5;">Watch</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:50px;">
+
+          <!-- Risk header -->
+          <div class="b-card" style="padding:12px 14px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:500;">Today's risk</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+              <span class="mono" style="font-size:20px;font-weight:600;letter-spacing:-0.02em;" class="t-pos">+0.82%</span>
+              <span class="mono t-muted" style="font-size:11px;">$5,820 R</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:11px;color:var(--text-muted);">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>Trades today</span><span class="mono t-text">2 / 5</span></div>
+                <div class="progress"><span style="width:40%;"></span></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>Drawdown</span><span class="mono t-text">0.6 / 3.0%</span></div>
+                <div class="progress"><span style="width:20%;background:var(--success);"></span></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>Acct exposure</span><span class="mono t-text">52%</span></div>
+                <div class="progress"><span style="width:52%;background:var(--warning);"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Watchlist -->
+          <div class="b-card" style="overflow:hidden;">
+            <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);">
+              <div style="font-weight:600;font-size:13px;">Watchlist</div>
+              <span class="chip" style="margin-left:8px;">24</span>
+              <button class="btn btn-ghost btn-sm" style="margin-left:auto;"><i data-lucide="plus"></i></button>
+            </div>
+            <div id="wl-list"></div>
+          </div>
+
+          <!-- Events -->
+          <div class="b-card" style="overflow:hidden;">
+            <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);">
+              <div style="font-weight:600;font-size:13px;">Today · catalysts</div>
+              <button class="btn btn-ghost btn-sm" style="margin-left:auto;"><i data-lucide="calendar"></i></button>
+            </div>
+            <div>
+              <div class="ev-row"><span class="chip chip-warn" style="height:18px;">CPI</span><span style="flex:1;">Dec CPI YoY</span><span class="mono t-muted">08:30</span><span class="mono">3.2% e</span></div>
+              <div class="ev-row"><span class="chip" style="height:18px;">EARN</span><span style="flex:1;font-weight:500;">NFLX</span><span class="mono t-muted">AMC</span><span class="mono t-pos">+8.2% IV</span></div>
+              <div class="ev-row"><span class="chip" style="height:18px;">EARN</span><span style="flex:1;font-weight:500;">UAL</span><span class="mono t-muted">AMC</span><span class="mono t-pos">+5.1% IV</span></div>
+              <div class="ev-row"><span class="chip" style="height:18px;">FED</span><span style="flex:1;">Beige Book</span><span class="mono t-muted">14:00</span><span></span></div>
+              <div class="ev-row"><span class="chip" style="height:18px;">EARN</span><span style="flex:1;font-weight:500;">DAL</span><span class="mono t-muted">BMO</span><span class="mono t-pos">+3.8% IV</span></div>
+            </div>
+          </div>
+
+          <!-- Quick links -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+            <a class="b-card" style="padding:10px 12px;text-decoration:none;color:var(--text);" href="forecast.html">
+              <div style="color:var(--text-muted);font-size:10px;">Forecast</div>
+              <div style="font-weight:500;margin-top:2px;display:flex;align-items:center;gap:4px;"><i data-lucide="line-chart"></i> SPY next-week</div>
+            </a>
+            <a class="b-card" style="padding:10px 12px;text-decoration:none;color:var(--text);" href="backtest.html">
+              <div style="color:var(--text-muted);font-size:10px;">Backtest</div>
+              <div style="font-weight:500;margin-top:2px;display:flex;align-items:center;gap:4px;"><i data-lucide="flask-conical"></i> Strategy lab</div>
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('dashboard', { crumbs: ['Workspace', 'Today'], topbarRight: `
+    <div class="seg">
+      <button class="active">Today</button>
+      <button>Week</button>
+      <button>Custom</button>
+    </div>
+    <div class="divider-v"></div>
+    <button class="btn btn-sm"><i data-lucide="zap"></i> Run brief <span class="kbd">g b</span></button>
+  ` });
+
+  // sector heatmap
+  const sectors = [
+    { t: 'Tech', v: 1.42 }, { t: 'Comm', v: 0.84 }, { t: 'Cons-D', v: 0.61 },
+    { t: 'Financ', v: 0.32 }, { t: 'Health', v: 0.18 }, { t: 'Indust', v: 0.05 },
+    { t: 'Mat', v: -0.12 }, { t: 'Cons-S', v: -0.21 }, { t: 'Energy', v: -0.84 },
+    { t: 'RE', v: -0.42 }, { t: 'Util', v: -0.61 },
+  ];
+  const hm = document.getElementById('heatmap');
+  hm.innerHTML = sectors.map(s => {
+    const intensity = Math.min(Math.abs(s.v) / 1.5, 1);
+    const c = s.v >= 0 ? `color-mix(in oklab, var(--success) ${15 + intensity * 50}%, var(--bg-elev-2))` : `color-mix(in oklab, var(--danger) ${15 + intensity * 50}%, var(--bg-elev-2))`;
+    return `<div class="heatmap-cell" style="background:${c};"><span>${s.t}</span><span class="pct">${s.v >= 0 ? '+' : ''}${s.v.toFixed(2)}%</span></div>`;
+  }).join('');
+
+  // sparklines
+  document.getElementById('s1').innerHTML = spark(walk(1, 30, 0.06), { w: 100, h: 22 });
+  document.getElementById('s2').innerHTML = spark(walk(2, 30, 0.04), { w: 100, h: 22 });
+  document.getElementById('s3').innerHTML = spark(walk(3, 30, -0.4), { w: 100, h: 22 });
+  document.getElementById('s4').innerHTML = spark(walk(4, 30, 0.2), { w: 100, h: 22 });
+  document.getElementById('s5').innerHTML = spark(walk(5, 30, -0.05), { w: 100, h: 22 });
+  document.getElementById('s6').innerHTML = spark(walk(6, 30, 0.01), { w: 100, h: 22 });
+
+  // watchlist
+  const wl = [
+    { t: 'AAPL', p: 221.04, c: 1.16, seed: 11 },
+    { t: 'NVDA', p: 938.42, c: 2.88, seed: 12 },
+    { t: 'MSFT', p: 442.10, c: 0.61, seed: 13 },
+    { t: 'GOOGL', p: 198.20, c: 0.42, seed: 14 },
+    { t: 'AMZN', p: 224.80, c: -0.18, seed: 15 },
+    { t: 'TSLA', p: 249.32, c: -1.22, seed: 16 },
+    { t: 'META', p: 594.20, c: -0.30, seed: 17 },
+    { t: 'AMD', p: 184.20, c: 1.84, seed: 18 },
+    { t: 'NFLX', p: 712.40, c: 0.92, seed: 19 },
+    { t: 'CRM', p: 318.40, c: 1.21, seed: 20 },
+    { t: 'AVGO', p: 1612.10, c: 2.10, seed: 21 },
+  ];
+  document.getElementById('wl-list').innerHTML = wl.map(w => `
+    <div class="wl-row">
+      <span style="font-weight:600;font-size:12px;">${w.t}</span>
+      <span>${spark(walk(w.seed, 25, w.c * 0.05), { w: 90, h: 18 })}</span>
+      <span class="mono" style="text-align:right;font-size:11px;">${w.p.toFixed(2)}</span>
+      <span class="mono" style="text-align:right;font-size:11px;color:var(--${w.c >= 0 ? 'success' : 'danger'});">${w.c >= 0 ? '+' : ''}${w.c.toFixed(2)}%</span>
+    </div>
+  `).join('');
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

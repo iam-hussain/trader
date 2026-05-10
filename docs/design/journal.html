@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Journal — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .heatcal { display: grid; grid-template-columns: repeat(53, 1fr); gap: 2px; }
+  .heatcal-cell { aspect-ratio: 1; border-radius: 2px; background: var(--bg-elev-2); cursor: pointer; }
+  .heatcal-cell:hover { outline: 1px solid var(--text); }
+  .trade-row { padding: 14px 16px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 70px 1fr 200px 100px 90px; gap: 16px; align-items: flex-start; }
+  .trade-row:hover { background: var(--bg-elev-2); }
+  .tag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 3px; font-size: 10px; background: var(--bg-elev-3); color: var(--text-muted); }
+  .tag.setup { background: color-mix(in oklab, var(--primary) 15%, transparent); color: var(--primary); }
+  .tag.cat { background: color-mix(in oklab, var(--warning) 15%, transparent); color: var(--warning); }
+  .bar-h { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; position: relative; }
+  .bar:hover::after { content: attr(data-l); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; color: var(--text); background: #000; padding: 3px 6px; border-radius: 3px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+
+    <div class="page" style="padding:16px 20px;">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div>
+          <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em;">Journal</div>
+          <div style="font-size:12px;color:var(--text-muted);">Quarterly edge analysis · 2025 Q4</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <div class="seg">
+            <button>2024</button>
+            <button class="active">2025</button>
+            <button>YTD</button>
+            <button>30d</button>
+          </div>
+          <button class="btn btn-sm"><i data-lucide="filter"></i> Filters</button>
+          <button class="btn btn-sm"><i data-lucide="download"></i> Export</button>
+          <button class="btn btn-primary btn-sm"><i data-lucide="plus"></i> New entry <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">N</span></button>
+        </div>
+      </div>
+
+      <!-- Stats strip -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;">
+        <div class="b-card" style="padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;">Net P/L</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:4px;letter-spacing:-0.02em;color:var(--success);">+$84,230</div>
+          <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:2px;">+11.8% on $712k</div>
+        </div>
+        <div class="b-card" style="padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;">Win rate</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:4px;">58%</div>
+          <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:2px;">94 / 162 trades</div>
+        </div>
+        <div class="b-card" style="padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;"><span class="tip" data-tip="Average winner ÷ average loser">Profit factor</span></div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:4px;">2.14</div>
+          <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:2px;">$610 avg W · $285 avg L</div>
+        </div>
+        <div class="b-card" style="padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;">Sharpe</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:4px;">1.62</div>
+          <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:2px;">vol 14.2%</div>
+        </div>
+        <div class="b-card" style="padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;">Max DD</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:4px;color:var(--danger);">−4.8%</div>
+          <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:2px;">14d in Aug</div>
+        </div>
+        <div class="b-card" style="padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;">Best day</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:4px;color:var(--success);">+$8,420</div>
+          <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:2px;">Nov 6 · NVDA print</div>
+        </div>
+      </div>
+
+      <!-- Calendar heatmap -->
+      <div class="b-card" style="padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-weight:600;font-size:13px;">Trading days · 2025</div>
+          <span class="chip">252 sessions · 162 traded</span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);">
+            <span>Loss</span>
+            <div style="display:flex;gap:1px;">
+              <span style="width:10px;height:10px;background:color-mix(in oklab, var(--danger) 80%, transparent);border-radius:2px;"></span>
+              <span style="width:10px;height:10px;background:color-mix(in oklab, var(--danger) 50%, transparent);border-radius:2px;"></span>
+              <span style="width:10px;height:10px;background:var(--bg-elev-2);border-radius:2px;"></span>
+              <span style="width:10px;height:10px;background:color-mix(in oklab, var(--success) 50%, transparent);border-radius:2px;"></span>
+              <span style="width:10px;height:10px;background:color-mix(in oklab, var(--success) 80%, transparent);border-radius:2px;"></span>
+            </div>
+            <span>Gain</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:24px 1fr;gap:6px;">
+          <div style="display:grid;grid-template-rows:repeat(7,1fr);gap:2px;font-size:9px;color:var(--text-dim);font-family:'Geist Mono',monospace;align-items:center;">
+            <span></span><span>M</span><span></span><span>W</span><span></span><span>F</span><span></span>
+          </div>
+          <div class="heatcal" id="cal"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(12,1fr);font-size:10px;color:var(--text-muted);font-family:'Geist Mono',monospace;margin-top:6px;padding-left:30px;">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+        </div>
+      </div>
+
+      <!-- Edge analysis chart -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;">
+        <div class="b-card" style="padding:14px 16px;">
+          <div style="display:flex;align-items:center;margin-bottom:14px;">
+            <div style="font-weight:600;font-size:13px;">Edge by setup</div>
+            <span class="chip" style="margin-left:8px;">avg P/L per trade</span>
+            <div style="margin-left:auto;font-size:11px;color:var(--text-muted);">2025 · 162 trades</div>
+          </div>
+          <div class="bar-h" id="bars"></div>
+          <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;font-size:10px;color:var(--text-muted);margin-top:8px;text-align:center;font-family:'Geist Mono',monospace;">
+            <span>Earn drift</span><span>Gap-go</span><span>EMA cross</span><span>Mean rev</span><span>Breakout</span><span>Hedge</span><span>FOMC fade</span><span>News pop</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;font-size:10px;margin-top:4px;text-align:center;font-family:'Geist Mono',monospace;">
+            <span class="t-pos">+$420</span><span class="t-pos">+$610</span><span class="t-pos">+$280</span><span class="t-neg">−$110</span><span class="t-pos">+$185</span><span class="t-neg">−$240</span><span class="t-pos">+$340</span><span class="t-pos">+$92</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:14px;border-top:1px solid var(--border);padding-top:10px;line-height:1.5;">
+            <strong style="color:var(--text);">Insight:</strong> Mean-reversion setups have negative edge YTD; hedges drag (expected). Concentrate sizing in earnings drift + gap-and-go.
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="b-card" style="padding:12px 14px;">
+          <div style="font-weight:600;font-size:12px;margin-bottom:10px;">Filters</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:11px;">
+            <div>
+              <div style="color:var(--text-muted);margin-bottom:4px;">Date range</div>
+              <input class="input" value="2025-01-01 → 2025-12-31" style="width:100%;font-family:'Geist Mono',monospace;" />
+            </div>
+            <div>
+              <div style="color:var(--text-muted);margin-bottom:4px;">Setup</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                <span class="chip chip-info">earnings drift</span>
+                <span class="chip">gap-and-go</span>
+                <span class="chip">+5</span>
+              </div>
+            </div>
+            <div>
+              <div style="color:var(--text-muted);margin-bottom:4px;">Outcome</div>
+              <div class="seg" style="width:100%;"><button class="active" style="flex:1;">All</button><button style="flex:1;">Win</button><button style="flex:1;">Loss</button></div>
+            </div>
+            <div>
+              <div style="color:var(--text-muted);margin-bottom:4px;">Instrument</div>
+              <div class="seg" style="width:100%;"><button class="active" style="flex:1;">Both</button><button style="flex:1;">Equity</button><button style="flex:1;">Options</button></div>
+            </div>
+            <div>
+              <div style="color:var(--text-muted);margin-bottom:4px;">Tags</div>
+              <input class="input" placeholder="Type to filter…" style="width:100%;" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trade entries -->
+      <div class="b-card" style="overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <div style="font-weight:600;font-size:13px;">Recent entries</div>
+          <span class="chip">14 this week</span>
+          <div style="margin-left:auto;display:flex;gap:6px;">
+            <div class="seg"><button class="active">Closed</button><button>Open</button><button>All</button></div>
+          </div>
+        </div>
+
+        <div style="padding:8px 16px;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);background:var(--bg-elev-1);display:grid;grid-template-columns:70px 1fr 200px 100px 90px;gap:16px;">
+          <div>Date · Tkr</div><div>Thesis · tags · screenshots</div><div>Setup</div><div style="text-align:right;">P/L</div><div style="text-align:right;">R</div>
+        </div>
+
+        <div class="trade-row">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace;">Jan 21</div>
+            <div style="font-weight:600;font-size:14px;margin-top:2px;">NVDA</div>
+            <div class="chip chip-pos" style="margin-top:4px;">WIN</div>
+          </div>
+          <div>
+            <div style="font-size:13px;line-height:1.5;margin-bottom:6px;">Earnings drift continuation; bought call vert on pullback to 20EMA, exited 1/2 at +50%, runner stopped at break-even.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+              <span class="tag setup">earnings drift</span>
+              <span class="tag setup">RS leader</span>
+              <span class="tag cat">post-print</span>
+              <div style="margin-left:8px;display:flex;gap:4px;">
+                <div style="width:36px;height:24px;border-radius:3px;background:linear-gradient(135deg, oklch(40% 0.04 250), var(--bg-elev-3));border:1px solid var(--border);"></div>
+                <div style="width:36px;height:24px;border-radius:3px;background:linear-gradient(135deg, oklch(35% 0.06 280), var(--bg-elev-3));border:1px solid var(--border);"></div>
+                <div style="width:36px;height:24px;border-radius:3px;background:var(--bg-elev-3);border:1px dashed var(--border-strong);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:11px;">+</div>
+              </div>
+            </div>
+            <details style="margin-top:6px;"><summary style="font-size:10px;color:var(--primary);cursor:pointer;list-style:none;">Lesson learned</summary><div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5;border-left:2px solid var(--border);padding-left:8px;">Don't trail stop too tight on day 1; runner gave back $180 of P/L because stop was inside ATR.</div></details>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            <div>Feb21 940/960C vert</div>
+            <div>Hold 3d · 10ctr</div>
+            <div class="mono">claude-sonnet-4.5 · conf 72</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="mono t-pos" style="font-size:14px;font-weight:600;">+$650</div>
+            <div class="mono" style="font-size:11px;color:var(--text-muted);">+$1.6 / contract</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="mono" style="font-size:14px;font-weight:600;">+1.5R</div>
+            <div class="mono" style="font-size:11px;color:var(--text-muted);">on $420 risk</div>
+          </div>
+        </div>
+
+        <div class="trade-row">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace;">Jan 17</div>
+            <div style="font-weight:600;font-size:14px;margin-top:2px;">XOM</div>
+            <div class="chip chip-neg" style="margin-top:4px;">LOSS</div>
+          </div>
+          <div>
+            <div style="font-size:13px;line-height:1.5;margin-bottom:6px;">Mean-reversion long at 110 support; crude rolled over, stopped out same session.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag setup">mean reversion</span>
+              <span class="tag cat">commodity drag</span>
+              <span class="tag" style="background:color-mix(in oklab, var(--danger) 15%, transparent);color:var(--danger);">lesson · ignored macro</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);"><div>EQUITY long</div><div>Hold 4h · 100sh</div><div class="mono">gpt-4o · conf 51</div></div>
+          <div style="text-align:right;"><div class="mono t-neg" style="font-size:14px;font-weight:600;">−$240</div><div class="mono" style="font-size:11px;color:var(--text-muted);">−$2.40 / share</div></div>
+          <div style="text-align:right;"><div class="mono" style="font-size:14px;font-weight:600;">−1.0R</div><div class="mono" style="font-size:11px;color:var(--text-muted);">on $240 risk</div></div>
+        </div>
+
+        <div class="trade-row">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace;">Jan 16</div>
+            <div style="font-weight:600;font-size:14px;margin-top:2px;">MSFT</div>
+            <div class="chip chip-pos" style="margin-top:4px;">WIN</div>
+          </div>
+          <div>
+            <div style="font-size:13px;line-height:1.5;margin-bottom:6px;">Gap-and-go on positive copilot data leak; entered at VWAP reclaim, scaled out into close.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="tag setup">gap-and-go</span>
+              <span class="tag cat">news catalyst</span>
+              <span class="tag setup">VWAP reclaim</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);"><div>Feb 440C</div><div>Hold 1d · 5ctr</div><div class="mono">claude-sonnet-4.5 · conf 78</div></div>
+          <div style="text-align:right;"><div class="mono t-pos" style="font-size:14px;font-weight:600;">+$1,200</div><div class="mono" style="font-size:11px;color:var(--text-muted);">+$2.40 / contract</div></div>
+          <div style="text-align:right;"><div class="mono" style="font-size:14px;font-weight:600;">+2.9R</div><div class="mono" style="font-size:11px;color:var(--text-muted);">on $410 risk</div></div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('journal', { crumbs: ['Workspace', 'Journal'] });
+
+  // calendar heatmap
+  const cal = document.getElementById('cal');
+  let html = '';
+  let s = 13;
+  for (let w = 0; w < 53; w++) {
+    for (let d = 0; d < 7; d++) {
+      s = (s * 9301 + 49297) % 233280;
+      const r = s / 233280;
+      let c = 'var(--bg-elev-2)';
+      // weekends mostly blank
+      if (d === 0 || d === 6) c = 'var(--bg-elev-2)';
+      else if (r < 0.15) c = 'color-mix(in oklab, var(--danger) 80%, transparent)';
+      else if (r < 0.32) c = 'color-mix(in oklab, var(--danger) 45%, transparent)';
+      else if (r < 0.48) c = 'var(--bg-elev-3)';
+      else if (r < 0.7) c = 'color-mix(in oklab, var(--success) 35%, transparent)';
+      else if (r < 0.88) c = 'color-mix(in oklab, var(--success) 60%, transparent)';
+      else c = 'color-mix(in oklab, var(--success) 85%, transparent)';
+      html += `<div class="heatcal-cell" style="background:${c};grid-column:${w+1};grid-row:${d+1};"></div>`;
+    }
+  }
+  cal.innerHTML = html;
+  cal.style.gridTemplateRows = 'repeat(7, 1fr)';
+  cal.style.gridAutoFlow = 'column';
+
+  // bars
+  const bars = [
+    { l: 'Earn drift', v: 420, n: 28 },
+    { l: 'Gap-go', v: 610, n: 22 },
+    { l: 'EMA cross', v: 280, n: 34 },
+    { l: 'Mean rev', v: -110, n: 18 },
+    { l: 'Breakout', v: 185, n: 24 },
+    { l: 'Hedge', v: -240, n: 12 },
+    { l: 'FOMC fade', v: 340, n: 8 },
+    { l: 'News pop', v: 92, n: 16 },
+  ];
+  const max = Math.max(...bars.map(b => Math.abs(b.v)));
+  document.getElementById('bars').innerHTML = bars.map(b => {
+    const h = (Math.abs(b.v) / max) * 100;
+    const c = b.v >= 0 ? 'var(--success)' : 'var(--danger)';
+    const bg = b.v >= 0 ? 'color-mix(in oklab, var(--success) 35%, transparent)' : 'color-mix(in oklab, var(--danger) 35%, transparent)';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;">
+      <div class="bar" data-l="${b.l} · ${b.n} trades · $${b.v}" style="height:${h}%;width:60%;background:${bg};border-bottom:2px solid ${c};"></div>
+      <div style="font-size:9px;color:var(--text-dim);font-family:'Geist Mono',monospace;">${b.n}</div>
+    </div>`;
+  }).join('');
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

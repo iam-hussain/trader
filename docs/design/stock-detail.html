@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>NVDA — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .sticky-head { position: sticky; top: 44px; z-index: 10; background: var(--bg-elev-1); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .kpi { background: var(--bg-elev-1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .kpi .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 4px; }
+  .kpi .val { font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 600; margin-top: 4px; letter-spacing: -0.02em; }
+  .kpi .delta { font-family: 'Geist Mono', monospace; font-size: 10px; }
+  .opt-row { display: grid; grid-template-columns: 60px 60px 70px 70px 60px 50px 60px 70px 70px 60px; align-items: center; font-family: 'Geist Mono', monospace; font-size: 11px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .opt-row:hover { background: var(--bg-elev-2); }
+  .opt-row .strike { text-align: center; background: var(--bg-elev-2); font-weight: 600; padding: 6px 4px; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  .opt-row.atm { background: color-mix(in oklab, var(--primary) 10%, transparent); }
+  .opt-row.atm .strike { background: color-mix(in oklab, var(--primary) 18%, var(--bg-elev-2)); }
+  .opt-row.itm-c > div:nth-child(-n+5) { background: color-mix(in oklab, var(--success) 6%, transparent); }
+  .opt-row.itm-p > div:nth-child(n+7) { background: color-mix(in oklab, var(--danger) 6%, transparent); }
+  .heat { display: grid; grid-template-columns: 60px repeat(8, 1fr); gap: 1px; font-family: 'Geist Mono', monospace; font-size: 10px; }
+  .heat-cell { padding: 6px; text-align: center; }
+  .news-item { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .filing-row { padding: 10px 16px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 60px 80px 1fr auto; align-items: center; gap: 12px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+
+    <!-- Sticky ticker header -->
+    <div class="sticky-head">
+      <div style="display:flex;align-items:flex-start;gap:18px;">
+        <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg, oklch(70% 0.18 145), oklch(50% 0.18 160));display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:16px;">NV</div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;font-weight:600;letter-spacing:-0.02em;">NVDA</span>
+            <span style="font-size:13px;color:var(--text-muted);">Nvidia Corp · NASDAQ</span>
+            <span class="chip">Tech · Semis</span>
+            <span class="chip chip-info">in watchlist</span>
+            <span class="pulse-dot" style="margin-left:4px;"></span>
+            <span style="font-size:10px;color:var(--text-muted);">live</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:2px;">
+            <span class="mono" style="font-size:32px;font-weight:600;letter-spacing:-0.03em;">938.42</span>
+            <span class="mono t-pos" style="font-size:14px;font-weight:500;">+26.32 (+2.88%)</span>
+            <span class="mono t-muted" style="font-size:11px;">After-hours: 939.18 +0.08%</span>
+          </div>
+          <div style="display:flex;gap:14px;font-size:11px;color:var(--text-muted);margin-top:6px;font-family:'Geist Mono',monospace;">
+            <span>MCAP <span class="t-text">$2.31T</span></span>
+            <span>VOL <span class="t-text">42.1M</span> / <span>52M avg</span></span>
+            <span>52W <span class="t-text">410.20 — 974.00</span></span>
+            <span>EPS <span class="t-text">2.84</span></span>
+            <span>NEXT EARN <span class="t-text">Feb 21 · AMC</span></span>
+          </div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm"><i data-lucide="bell"></i> Alert</button>
+            <button class="btn btn-sm"><i data-lucide="bookmark-check"></i> Watching</button>
+            <button class="btn btn-primary"><i data-lucide="zap"></i> Stage trade <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">S</span></button>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <span class="chip chip-pos"><i data-lucide="trending-up"></i> RS 92</span>
+            <span class="chip chip-info">IV rank 38</span>
+            <span class="chip">Float 2.45B</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs" style="margin-top:14px;border-bottom:none;">
+        <div class="tab">Overview</div>
+        <div class="tab">Chart</div>
+        <div class="tab active">Options</div>
+        <div class="tab">News <span class="chip" style="margin-left:4px;height:16px;font-size:9px;">12</span></div>
+        <div class="tab">Filings</div>
+        <div class="tab">Analysis</div>
+      </div>
+    </div>
+
+    <div class="page" style="padding:16px 20px;">
+
+      <!-- Overview band: KPI grid -->
+      <div>
+        <div class="h-section" style="margin-bottom:8px;">Overview</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="lbl"><span class="tip" data-tip="Price-to-earnings ratio">P/E</span></div><div class="val">62.4</div><div class="delta t-muted">SMH 28.1</div></div>
+          <div class="kpi"><div class="lbl"><span class="tip" data-tip="Earnings per share, trailing twelve months">EPS TTM</span></div><div class="val">15.04</div><div class="delta t-pos">+18.4% YoY</div></div>
+          <div class="kpi"><div class="lbl"><span class="tip" data-tip="IV Rank: where current implied vol sits in its 52-week range">IV Rank</span></div><div class="val">38</div><div class="delta t-muted">52w 12 — 81</div></div>
+          <div class="kpi"><div class="lbl"><span class="tip" data-tip="IV Percentile: % of last 252 days where IV was below today">IV %ile</span></div><div class="val">42</div><div class="delta t-muted">low-mid</div></div>
+          <div class="kpi"><div class="lbl"><span class="tip" data-tip="Relative Strength Index, 14 period">RSI(14)</span></div><div class="val">64</div><div class="delta t-warn">approaching 70</div></div>
+          <div class="kpi"><div class="lbl"><span class="tip" data-tip="Average True Range — typical daily move">ATR(14)</span></div><div class="val">18.40</div><div class="delta t-muted">≈ 2.0% daily</div></div>
+          <div class="kpi"><div class="lbl">Short int.</div><div class="val">1.2%</div><div class="delta t-muted">2.1d cover</div></div>
+          <div class="kpi"><div class="lbl">Float</div><div class="val">2.45B</div><div class="delta t-muted">99% public</div></div>
+          <div class="kpi"><div class="lbl">Avg vol 30d</div><div class="val">52.4M</div><div class="delta t-muted">today 0.8x</div></div>
+          <div class="kpi"><div class="lbl">Beta 5y</div><div class="val">1.62</div><div class="delta t-muted">vs SPY</div></div>
+          <div class="kpi"><div class="lbl">Div yield</div><div class="val">0.02%</div><div class="delta t-muted">$0.04</div></div>
+          <div class="kpi" style="background:linear-gradient(135deg, color-mix(in oklab, var(--warning) 10%, var(--bg-elev-1)), var(--bg-elev-1));border-color:color-mix(in oklab, var(--warning) 30%, var(--border));">
+            <div class="lbl">Next earnings</div>
+            <div class="val">Feb 21</div>
+            <div class="delta t-warn">in 30d · IV +12%</div>
+          </div>
+        </div>
+
+        <!-- 52w range bar -->
+        <div class="b-card" style="padding:14px 16px;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);font-family:'Geist Mono',monospace;margin-bottom:6px;">
+            <span>52W LOW · 410.20</span>
+            <span>938.42 · today (94% of range)</span>
+            <span>974.00 · 52W HIGH</span>
+          </div>
+          <div style="height:8px;background:linear-gradient(90deg, var(--danger), var(--warning), var(--success));border-radius:4px;position:relative;">
+            <div style="position:absolute;left:94%;top:-4px;width:2px;height:16px;background:var(--text);transform:translateX(-1px);"></div>
+            <div style="position:absolute;left:50%;top:-3px;width:1px;height:14px;background:var(--text-muted);opacity:0.5;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Options block -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:8px;">
+        <!-- Chain -->
+        <div class="b-card" style="overflow:hidden;">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="font-weight:600;font-size:13px;">Options chain</div>
+            <div class="seg">
+              <button class="active">Feb 21</button>
+              <button>Feb 28</button>
+              <button>Mar 7</button>
+              <button>Mar 21</button>
+              <button>Apr 18</button>
+              <button>Jun 20</button>
+            </div>
+            <div class="chip chip-info" style="margin-left:auto;">30d to exp</div>
+          </div>
+          <div style="display:grid;grid-template-columns:300px 60px 300px;font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;background:var(--bg-elev-2);">
+            <div style="padding:6px 8px;text-align:center;border-right:1px solid var(--border);font-weight:600;letter-spacing:0.1em;color:var(--text);">CALLS</div>
+            <div style="padding:6px;text-align:center;color:var(--text);font-weight:600;">STRIKE</div>
+            <div style="padding:6px 8px;text-align:center;border-left:1px solid var(--border);font-weight:600;letter-spacing:0.1em;color:var(--text);">PUTS</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(10,1fr);font-size:9px;color:var(--text-muted);text-transform:uppercase;background:var(--bg-elev-1);border-bottom:1px solid var(--border);">
+            <div style="padding:4px 8px;">OI</div><div style="padding:4px 8px;">Vol</div><div style="padding:4px 8px;">Delta</div><div style="padding:4px 8px;text-align:right;">Bid</div><div style="padding:4px 8px;text-align:right;">Ask</div>
+            <div></div>
+            <div style="padding:4px 8px;">Bid</div><div style="padding:4px 8px;">Ask</div><div style="padding:4px 8px;">Delta</div><div style="padding:4px 8px;">OI</div>
+          </div>
+          <div id="chain"></div>
+        </div>
+
+        <!-- P/C gauge + max pain + sources -->
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="b-card" style="padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="font-weight:600;font-size:13px;">Put / Call ratio</div>
+              <span class="chip chip-pos">bullish skew</span>
+            </div>
+            <svg viewBox="0 0 200 110" style="width:100%;">
+              <path fill="none" stroke="var(--bg-elev-3)" stroke-width="10" d="M20,90 A70,70 0 0,1 180,90"/>
+              <path fill="none" stroke="var(--success)" stroke-width="10" stroke-linecap="round" d="M20,90 A70,70 0 0,1 180,90" stroke-dasharray="220" stroke-dashoffset="121"/>
+              <text x="100" y="78" text-anchor="middle" font-family="Geist Mono" font-size="26" font-weight="600" fill="var(--text)">0.82</text>
+              <text x="100" y="96" text-anchor="middle" font-family="Geist" font-size="10" fill="var(--text-muted)">Calls heavy</text>
+              <text x="22" y="105" font-family="Geist Mono" font-size="9" fill="var(--text-dim)">0</text>
+              <text x="178" y="105" text-anchor="end" font-family="Geist Mono" font-size="9" fill="var(--text-dim)">2.0</text>
+            </svg>
+            <div style="border-top:1px solid var(--border);padding-top:10px;font-size:10px;color:var(--text-muted);">
+              <div style="margin-bottom:6px;font-weight:500;color:var(--text);font-size:11px;">Reconciled across</div>
+              <div style="display:grid;grid-template-columns:1fr auto 50px;gap:4px 8px;font-family:'Geist Mono',monospace;">
+                <span>CBOE</span><span class="t-dim">live</span><span class="t-text" style="text-align:right;">0.84</span>
+                <span>Yahoo</span><span class="t-dim">live</span><span class="t-text" style="text-align:right;">0.81</span>
+                <span>NASDAQ</span><span class="t-dim">live</span><span class="t-text" style="text-align:right;">0.83</span>
+                <span>Barchart</span><span class="t-dim">+15s</span><span class="t-text" style="text-align:right;">0.80</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="b-card" style="padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="font-weight:600;font-size:13px;">Max pain</div>
+              <span class="mono" style="font-size:13px;font-weight:600;">920</span>
+            </div>
+            <div style="height:32px;background:var(--bg-elev-2);border-radius:4px;position:relative;border:1px solid var(--border);">
+              <div style="position:absolute;left:10%;top:0;height:100%;width:1px;background:var(--text-dim);"></div>
+              <div style="position:absolute;left:30%;top:0;height:100%;width:1px;background:var(--text-dim);"></div>
+              <div style="position:absolute;left:50%;top:0;height:100%;width:2px;background:var(--warning);"></div>
+              <div style="position:absolute;left:67%;top:0;height:100%;width:2px;background:var(--text);"></div>
+              <div style="position:absolute;left:70%;top:0;height:100%;width:1px;background:var(--text-dim);"></div>
+              <div style="position:absolute;left:90%;top:0;height:100%;width:1px;background:var(--text-dim);"></div>
+              <div style="position:absolute;left:67%;top:-18px;font-size:9px;font-family:'Geist Mono',monospace;transform:translateX(-50%);white-space:nowrap;">spot 938</div>
+              <div style="position:absolute;left:50%;top:34px;font-size:9px;font-family:'Geist Mono',monospace;color:var(--warning);transform:translateX(-50%);white-space:nowrap;">pain 920</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);font-family:'Geist Mono',monospace;margin-top:30px;">
+              <span>880</span><span>900</span><span>920</span><span>940</span><span>960</span>
+            </div>
+          </div>
+
+          <div class="b-card" style="padding:14px;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:10px;">IV surface · Feb 21</div>
+            <div class="heat" id="iv-heat"></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-top:6px;font-family:'Geist Mono',monospace;">
+              <span>low IV</span>
+              <div style="display:flex;gap:1px;">
+                <span style="width:8px;height:8px;background:color-mix(in oklab, var(--primary) 20%, var(--bg-elev-2));"></span>
+                <span style="width:8px;height:8px;background:color-mix(in oklab, var(--primary) 50%, var(--bg-elev-2));"></span>
+                <span style="width:8px;height:8px;background:color-mix(in oklab, var(--primary) 80%, var(--bg-elev-2));"></span>
+                <span style="width:8px;height:8px;background:color-mix(in oklab, var(--danger) 50%, var(--bg-elev-2));"></span>
+                <span style="width:8px;height:8px;background:color-mix(in oklab, var(--danger) 90%, var(--bg-elev-2));"></span>
+              </div>
+              <span>high IV</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unusual + News + Filings split -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="b-card" style="overflow:hidden;">
+          <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);">
+            <div style="font-weight:600;font-size:13px;">Unusual options activity</div>
+            <span class="chip" style="margin-left:8px;">vol/OI &gt; 3x</span>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto;"><i data-lucide="external-link"></i></button>
+          </div>
+          <div>
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:50px 1fr 70px 60px 70px;align-items:center;gap:8px;font-size:11px;font-family:'Geist Mono',monospace;">
+              <span class="chip chip-pos" style="font-family:'Geist',sans;">SWEEP</span>
+              <span style="font-family:'Geist',sans;color:var(--text-muted);">Feb21 940C · ASK · multi-exch</span>
+              <span class="t-text" style="text-align:right;">3,420</span>
+              <span class="t-warn" style="text-align:right;">7.2x</span>
+              <span class="t-pos" style="text-align:right;">+$1.2M</span>
+            </div>
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:50px 1fr 70px 60px 70px;align-items:center;gap:8px;font-size:11px;font-family:'Geist Mono',monospace;">
+              <span class="chip" style="font-family:'Geist',sans;">BLOCK</span>
+              <span style="font-family:'Geist',sans;color:var(--text-muted);">Mar21 950C · BID · ARCA</span>
+              <span class="t-text" style="text-align:right;">1,800</span>
+              <span class="t-warn" style="text-align:right;">4.4x</span>
+              <span class="t-pos" style="text-align:right;">+$680K</span>
+            </div>
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:50px 1fr 70px 60px 70px;align-items:center;gap:8px;font-size:11px;font-family:'Geist Mono',monospace;">
+              <span class="chip chip-neg" style="font-family:'Geist',sans;">SWEEP</span>
+              <span style="font-family:'Geist',sans;color:var(--text-muted);">Feb21 920P · ASK · CBOE</span>
+              <span class="t-text" style="text-align:right;">980</span>
+              <span class="t-warn" style="text-align:right;">3.6x</span>
+              <span class="t-neg" style="text-align:right;">+$285K</span>
+            </div>
+            <div style="padding:10px 14px;display:grid;grid-template-columns:50px 1fr 70px 60px 70px;align-items:center;gap:8px;font-size:11px;font-family:'Geist Mono',monospace;">
+              <span class="chip" style="font-family:'Geist',sans;">REPEAT</span>
+              <span style="font-family:'Geist',sans;color:var(--text-muted);">Feb21 960C · 4 prints</span>
+              <span class="t-text" style="text-align:right;">2,140</span>
+              <span class="t-warn" style="text-align:right;">3.1x</span>
+              <span class="t-pos" style="text-align:right;">+$520K</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="b-card" style="overflow:hidden;">
+          <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);">
+            <div style="font-weight:600;font-size:13px;">News</div>
+            <span class="chip" style="margin-left:8px;">12 today</span>
+            <div class="seg" style="margin-left:auto;">
+              <button class="active">All</button>
+              <button>Bullish</button>
+              <button>Bearish</button>
+            </div>
+          </div>
+          <div>
+            <div class="news-item">
+              <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);margin-bottom:5px;">
+                <span style="font-weight:500;color:var(--text);">Reuters</span><span>·</span><span>14m</span>
+                <span class="chip chip-pos" style="margin-left:auto;height:18px;">+ bullish 0.78</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;line-height:1.35;margin-bottom:4px;">NVDA partners with Foxconn on factory-scale AI infrastructure for FY27</div>
+              <div style="font-size:11px;color:var(--text-muted);line-height:1.5;border-left:2px solid var(--primary);padding-left:8px;">Multi-year deal expands NVDA's data-center pipeline. Mgmt cites incremental $4B revenue exposure. Execution risk: capacity ramp through Q3.</div>
+            </div>
+            <div class="news-item">
+              <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);margin-bottom:5px;">
+                <span style="font-weight:500;color:var(--text);">Bloomberg</span><span>·</span><span>1h</span>
+                <span class="chip" style="margin-left:auto;height:18px;">~ neutral</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;line-height:1.35;">Analyst raises NVDA target to $1,050 citing data-center capex acceleration</div>
+            </div>
+            <div class="news-item">
+              <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);margin-bottom:5px;">
+                <span style="font-weight:500;color:var(--text);">CNBC</span><span>·</span><span>3h</span>
+                <span class="chip chip-warn" style="margin-left:auto;height:18px;">− bearish 0.42</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;line-height:1.35;">China export controls expanded to cover next-gen AI accelerators</div>
+            </div>
+            <div class="news-item">
+              <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);margin-bottom:5px;">
+                <span style="font-weight:500;color:var(--text);">SEC EDGAR</span><span>·</span><span>5h</span>
+                <span class="chip chip-info" style="margin-left:auto;height:18px;">filing</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;line-height:1.35;">Form 4: CFO Colette Kress sells 12,500 shares — $11.7M</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filings + Analysis -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="b-card" style="overflow:hidden;">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;">Filings &amp; insiders <span class="chip">SEC EDGAR · live</span></div>
+          <div class="filing-row">
+            <span class="chip">FORM 4</span>
+            <span class="mono t-muted">Jan 22</span>
+            <span><span style="font-weight:500;">Kress, Colette</span> · CFO sold 12,500 sh</span>
+            <span class="mono t-neg">−$11.7M</span>
+          </div>
+          <div class="filing-row">
+            <span class="chip">FORM 4</span>
+            <span class="mono t-muted">Jan 18</span>
+            <span><span style="font-weight:500;">Huang, Jen-Hsun</span> · CEO sold 120,000 sh</span>
+            <span class="mono t-neg">−$112.6M</span>
+          </div>
+          <div class="filing-row">
+            <span class="chip">10-Q</span>
+            <span class="mono t-muted">Nov 21</span>
+            <span><span style="font-weight:500;">Q3 FY25 quarterly report</span></span>
+            <span class="btn btn-sm">View</span>
+          </div>
+          <div class="filing-row">
+            <span class="chip">13F</span>
+            <span class="mono t-muted">Nov 14</span>
+            <span><span style="font-weight:500;">Citadel</span> · +18% position to 4.2M sh</span>
+            <span class="mono t-pos">+$3.4B</span>
+          </div>
+          <div class="filing-row">
+            <span class="chip">13F</span>
+            <span class="mono t-muted">Nov 14</span>
+            <span><span style="font-weight:500;">Renaissance Tech</span> · −12% trim</span>
+            <span class="mono t-neg">−$1.1B</span>
+          </div>
+        </div>
+
+        <div class="b-card" style="overflow:hidden;">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+            <div style="font-weight:600;font-size:13px;">LLM analysis</div>
+            <span class="chip chip-info"><i data-lucide="sparkles"></i> claude-sonnet-4.5</span>
+            <span class="chip" style="margin-left:auto;">re-run · cached 14m ago</span>
+          </div>
+          <div style="padding:14px 16px;font-size:12px;line-height:1.55;color:var(--text);">
+            Setup is <strong>continuation of post-earnings drift</strong>. NVDA outperforming SMH by 4.2% over 5d, holding above 20EMA on multiple closes. Foxconn news adds incremental DC narrative; insider sells are routine 10b5-1 cadence (no signal).
+            <div style="margin:12px 0;padding:10px;background:var(--bg-elev-2);border-radius:6px;border-left:2px solid var(--success);">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin-bottom:4px;">Thesis</div>
+              <div>Long via Feb 21 940/960 call vertical. Targets max profit on print above 960; risk capped to debit paid.</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding:12px 16px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Catalysts</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+              <div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--success);"></span>Q4 FY25 earnings · Feb 21 AMC</div>
+              <div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--warning);"></span>GTC keynote · Mar 17</div>
+              <div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--text-dim);"></span>Hyperscaler capex prints · ongoing</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding:12px 16px;">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Invalidation</div>
+            <ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+              <li>Close below 918 (20EMA + prior swing)</li>
+              <li>SMH breaks below 220 with negative breadth</li>
+              <li>Hyperscaler guides capex flat or below consensus</li>
+            </ul>
+          </div>
+          <div style="border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;font-weight:500;">Risk : Reward</div>
+              <div style="height:8px;background:var(--bg-elev-3);border-radius:4px;display:flex;overflow:hidden;">
+                <div style="width:30%;background:color-mix(in oklab, var(--danger) 50%, transparent);"></div>
+                <div style="width:70%;background:color-mix(in oklab, var(--success) 50%, transparent);"></div>
+              </div>
+              <div style="font-size:10px;font-family:'Geist Mono',monospace;color:var(--text-muted);margin-top:3px;display:flex;justify-content:space-between;"><span>−$420 risk</span><span>+$980 target · R:R 2.3</span></div>
+            </div>
+            <button class="btn btn-primary"><i data-lucide="zap"></i> Stage trade</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('watchlist', { crumbs: ['Markets', 'NVDA'], topbarRight: `
+    <input class="input mono" value="NVDA" style="width:120px;text-transform:uppercase;" />
+    <span class="kbd">/ to search</span>
+  ` });
+
+  // build chain
+  const strikes = [{k:880,oc:421,vc:120,dc:0.92,bc:58.40,ac:58.80,bp:0.05,ap:0.10,dp:-0.04,op:1840},
+                   {k:900,oc:1280,vc:340,dc:0.84,bc:40.20,ac:40.60,bp:0.45,ap:0.55,dp:-0.10,op:3204},
+                   {k:920,oc:2840,vc:920,dc:0.71,bc:24.40,ac:24.80,bp:1.85,ap:1.95,dp:-0.22,op:4108},
+                   {k:940,oc:5832,vc:3420,dc:0.52,bc:12.40,ac:12.55,bp:3.40,ap:3.50,dp:-0.41,op:5128,atm:true},
+                   {k:960,oc:4521,vc:1840,dc:0.32,bc:5.40,ac:5.55,bp:8.20,ap:8.40,dp:-0.62,op:2884},
+                   {k:980,oc:2104,vc:680,dc:0.18,bc:2.10,ac:2.20,bp:14.80,ap:15.10,dp:-0.78,op:1508},
+                   {k:1000,oc:984,vc:240,dc:0.09,bc:0.85,ac:0.95,bp:24.20,ap:24.60,dp:-0.88,op:920}];
+  const spot = 938.42;
+  document.getElementById('chain').innerHTML = strikes.map(s => {
+    const isAtm = s.atm;
+    const itmCall = s.k < spot;
+    const itmPut = s.k > spot;
+    return `<div class="opt-row ${isAtm ? 'atm' : ''} ${itmCall ? 'itm-c' : ''} ${itmPut ? 'itm-p' : ''}">
+      <div>${s.oc.toLocaleString()}</div><div>${s.vc.toLocaleString()}</div><div>${s.dc.toFixed(2)}</div><div style="text-align:right;">${s.bc.toFixed(2)}</div><div style="text-align:right;">${s.ac.toFixed(2)}</div>
+      <div class="strike">${s.k}</div>
+      <div>${s.bp.toFixed(2)}</div><div>${s.ap.toFixed(2)}</div><div>${s.dp.toFixed(2)}</div><div>${s.op.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+
+  // IV heat
+  const dtes = [7, 14, 30, 45, 60, 90, 120, 180];
+  const sk = ['−2σ', '−1σ', 'ATM', '+1σ', '+2σ', '+3σ'];
+  const heat = document.getElementById('iv-heat');
+  let html = '<div></div>';
+  dtes.forEach(d => html += `<div class="heat-cell t-muted">${d}d</div>`);
+  sk.forEach((s, i) => {
+    html += `<div class="heat-cell t-muted" style="text-align:left;padding-left:0;">${s}</div>`;
+    dtes.forEach((d, j) => {
+      const base = 38 + (i - 2) * (i < 2 ? 4 : 2.5) + (j > 4 ? 2 : 0);
+      const iv = base + Math.sin(i + j) * 3;
+      const pct = Math.min(Math.max((iv - 30) / 25, 0), 1);
+      const col = pct < 0.5 ? `color-mix(in oklab, var(--primary) ${pct * 100}%, var(--bg-elev-2))` : `color-mix(in oklab, var(--danger) ${(pct - 0.5) * 200}%, color-mix(in oklab, var(--primary) 50%, var(--bg-elev-2)))`;
+      html += `<div class="heat-cell" style="background:${col};">${iv.toFixed(0)}</div>`;
+    });
+  });
+  heat.innerHTML = html;
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

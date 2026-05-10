@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Trader — Design Canvas</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  body { margin: 0; background: #07070a; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState } = React;
+
+const screens = [
+  { group: 'Daily flow', items: [
+    { id: 'dashboard', label: '01 · Dashboard / Today', src: 'dashboard.html', w: 1440, h: 1100 },
+    { id: 'brief', label: '02 · Brief / Report', src: 'brief.html', w: 1440, h: 1300 },
+    { id: 'orders', label: '03 · Order Staging', src: 'orders.html', w: 1440, h: 1200 },
+  ]},
+  { group: 'Research', items: [
+    { id: 'stock', label: '04 · Stock Detail (NVDA)', src: 'stock-detail.html', w: 1440, h: 1500 },
+    { id: 'watchlist', label: '05 · Watchlist', src: 'watchlist.html', w: 1440, h: 1100 },
+    { id: 'forecast', label: '06 · Forecast (SPY)', src: 'forecast.html', w: 1440, h: 1300 },
+    { id: 'backtest', label: '07 · Backtest', src: 'backtest.html', w: 1440, h: 1500 },
+  ]},
+  { group: 'After-hours · Config', items: [
+    { id: 'journal', label: '08 · Journal', src: 'journal.html', w: 1440, h: 1300 },
+    { id: 'settings', label: '09 · Settings', src: 'settings.html', w: 1440, h: 2400 },
+  ]},
+  { group: 'Foundations', items: [
+    { id: 'components', label: 'Components catalog', src: 'components.html', w: 1440, h: 2400 },
+  ]},
+];
+
+function Frame({ src }) {
+  return (
+    <iframe
+      src={src}
+      style={{ width: '100%', height: '100%', border: 'none', background: '#0a0a0c', display: 'block' }}
+      loading="lazy"
+    />
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas title="Trader · Personal Trading Daily Helper" subtitle="9 screens + components catalog · drag rows to reorder, click any artboard to focus">
+      {screens.map(g => (
+        <DCSection key={g.group} id={g.group} title={g.group}>
+          {g.items.map(s => (
+            <DCArtboard key={s.id} id={s.id} label={s.label} width={s.w} height={s.h}>
+              <Frame src={s.src} />
+            </DCArtboard>
+          ))}
+        </DCSection>
+      ))}
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

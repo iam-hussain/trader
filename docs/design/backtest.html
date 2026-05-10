@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Backtest — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .strat { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elev-1); cursor: pointer; transition: border-color 0.12s; }
+  .strat:hover { border-color: var(--border-strong); }
+  .strat.active { border-color: var(--primary); background: color-mix(in oklab, var(--primary) 6%, var(--bg-elev-1)); }
+  .form-row { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .form-row:last-child { border-bottom: none; }
+  .form-row label { font-size: 11px; color: var(--text-muted); }
+  .trade-row { display: grid; grid-template-columns: 70px 60px 50px 80px 80px 70px 80px 80px 1fr; padding: 7px 12px; font-size: 11px; border-bottom: 1px solid var(--border); align-items: center; }
+  .trade-row:hover { background: var(--bg-elev-2); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+    <div class="page" style="padding:16px 20px;">
+
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div>
+          <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em;">Backtest</div>
+          <div style="font-size:12px;color:var(--text-muted);">Run strategies on historical data · 8y of 1m bars cached locally</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="btn btn-sm"><i data-lucide="folder-open"></i> Load run</button>
+          <button class="btn btn-sm"><i data-lucide="bookmark"></i> Save preset</button>
+          <button class="btn btn-primary btn-sm"><i data-lucide="play"></i> Run backtest <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">⌘↵</span></button>
+        </div>
+      </div>
+
+      <!-- Strategy library -->
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:8px;">Strategy library</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div class="strat active">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="trending-up" style="color:var(--primary);"></i><strong style="font-size:13px;">EMA crossover</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Long when 9-EMA crosses above 21-EMA. Exit on opposite cross.</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;">
+              <span>Sharpe <span style="color:var(--text);">1.42</span></span>
+              <span>Win <span style="color:var(--text);">54%</span></span>
+            </div>
+          </div>
+          <div class="strat">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="git-pull-request" style="color:var(--text-muted);"></i><strong style="font-size:13px;">RSI mean-revert</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Buy when RSI(2) &lt; 10, sell when RSI(2) &gt; 70.</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;"><span>Sharpe <span style="color:var(--text);">0.91</span></span><span>Win <span style="color:var(--text);">63%</span></span></div>
+          </div>
+          <div class="strat">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="calendar-clock" style="color:var(--text-muted);"></i><strong style="font-size:13px;">Earnings PEAD</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Long after positive earnings surprise &gt; 5%, hold 5d.</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;"><span>Sharpe <span style="color:var(--text);">1.78</span></span><span>Win <span style="color:var(--text);">58%</span></span></div>
+          </div>
+          <div class="strat">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="zap" style="color:var(--text-muted);"></i><strong style="font-size:13px;">Gap-and-go</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Long if gap &gt; 2% and 5min ORB high broken; stop at OR low.</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;"><span>Sharpe <span style="color:var(--text);">1.12</span></span><span>Win <span style="color:var(--text);">41%</span></span></div>
+          </div>
+          <div class="strat">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="bar-chart-3" style="color:var(--text-muted);"></i><strong style="font-size:13px;">Vol breakout</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Bollinger squeeze + volume &gt; 2x avg → momentum entry.</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;"><span>Sharpe <span style="color:var(--text);">1.34</span></span><span>Win <span style="color:var(--text);">47%</span></span></div>
+          </div>
+          <div class="strat">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="layers" style="color:var(--text-muted);"></i><strong style="font-size:13px;">Pairs trade</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Spread z-score &gt; 2 on cointegrated pairs (AAPL/MSFT).</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;"><span>Sharpe <span style="color:var(--text);">1.61</span></span><span>Win <span style="color:var(--text);">68%</span></span></div>
+          </div>
+          <div class="strat">
+            <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="moon" style="color:var(--text-muted);"></i><strong style="font-size:13px;">Overnight drift</strong></div>
+            <div style="color:var(--text-muted);font-size:11px;margin-top:6px;line-height:1.4;">Long SPY at 3:55pm close, sell at next open. Tail-risk capped.</div>
+            <div class="mono" style="font-size:10px;color:var(--text-muted);margin-top:8px;display:flex;gap:10px;"><span>Sharpe <span style="color:var(--text);">1.04</span></span><span>Win <span style="color:var(--text);">56%</span></span></div>
+          </div>
+          <div class="strat" style="border-style:dashed;justify-content:center;align-items:center;display:flex;flex-direction:column;color:var(--text-muted);">
+            <i data-lucide="plus" style="width:18px;height:18px;"></i>
+            <div style="font-size:12px;margin-top:6px;">New strategy</div>
+            <div style="font-size:10px;margin-top:2px;">From Python file</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;">
+        <!-- params -->
+        <div class="b-card" style="padding:12px 14px;align-self:start;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px;">Parameters · EMA crossover</div>
+          <div class="form-row"><label>Universe</label><div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="chip">SPY</span><span class="chip">QQQ</span><span class="chip">AAPL</span><span class="chip">+ add</span></div></div>
+          <div class="form-row"><label>Date range</label><div style="display:flex;gap:4px;"><input class="input mono" value="2018-01-01" style="font-size:11px;"/><input class="input mono" value="2025-12-31" style="font-size:11px;"/></div></div>
+          <div class="form-row"><label>Bar size</label><div class="seg" style="font-size:10px;"><button>1m</button><button>5m</button><button class="active">1d</button></div></div>
+          <div class="form-row"><label>Fast EMA</label><input class="input mono" value="9"/></div>
+          <div class="form-row"><label>Slow EMA</label><input class="input mono" value="21"/></div>
+          <div class="form-row"><label>Position size</label><div style="display:flex;gap:4px;align-items:center;"><input class="input mono" value="100" style="width:70px;"/><span style="color:var(--text-muted);font-size:11px;">% equity</span></div></div>
+          <div class="form-row"><label>Slippage</label><input class="input mono" value="2" style="width:70px;"/></div>
+          <div class="form-row"><label>Fee/share</label><input class="input mono" value="0.005" style="width:70px;"/></div>
+          <div class="form-row"><label>Initial cash</label><input class="input mono" value="100,000"/></div>
+          <div class="form-row"><label>Walk-forward</label><div class="seg" style="font-size:10px;"><button class="active">On</button><button>Off</button></div></div>
+        </div>
+
+        <!-- results -->
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;">
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Total return</div><div class="mono t-pos" style="font-size:18px;font-weight:600;margin-top:2px;">+184.2%</div></div>
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">CAGR</div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">15.4%</div></div>
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;"><span class="tip" data-tip="Annualized return / volatility">Sharpe</span></div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">1.42</div></div>
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;"><span class="tip" data-tip="Like Sharpe but only counts downside">Sortino</span></div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">1.98</div></div>
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Max DD</div><div class="mono t-neg" style="font-size:18px;font-weight:600;margin-top:2px;">-14.2%</div></div>
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Win rate</div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">54%</div></div>
+            <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;"><span class="tip" data-tip="Gross profit / gross loss">Profit factor</span></div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">1.84</div></div>
+          </div>
+
+          <!-- equity curve -->
+          <div class="b-card" style="padding:14px 16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="font-weight:600;font-size:13px;">Equity curve</div>
+              <span class="chip">vs SPY buy &amp; hold</span>
+              <div style="margin-left:auto;display:flex;gap:6px;font-size:10px;color:var(--text-muted);">
+                <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--primary);"></span>strategy</span>
+                <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--text-muted);"></span>benchmark</span>
+              </div>
+            </div>
+            <svg viewBox="0 0 900 220" style="width:100%;height:220px;">
+              <g stroke="var(--border)" stroke-width="0.5">
+                <line x1="40" y1="20" x2="40" y2="190"/>
+                <line x1="40" y1="190" x2="880" y2="190"/>
+                <line x1="40" y1="60" x2="880" y2="60" stroke-dasharray="2,4"/>
+                <line x1="40" y1="105" x2="880" y2="105" stroke-dasharray="2,4"/>
+                <line x1="40" y1="150" x2="880" y2="150" stroke-dasharray="2,4"/>
+              </g>
+              <g font-family="Geist Mono" font-size="10" fill="var(--text-muted)">
+                <text x="34" y="24" text-anchor="end">$300k</text>
+                <text x="34" y="64" text-anchor="end">$240k</text>
+                <text x="34" y="109" text-anchor="end">$180k</text>
+                <text x="34" y="154" text-anchor="end">$140k</text>
+                <text x="34" y="194" text-anchor="end">$100k</text>
+                <text x="60" y="208">2018</text>
+                <text x="200" y="208">2019</text>
+                <text x="340" y="208">2020</text>
+                <text x="480" y="208">2021</text>
+                <text x="620" y="208">2022</text>
+                <text x="760" y="208">2024</text>
+                <text x="855" y="208">2025</text>
+              </g>
+              <path id="bench" fill="none" stroke="var(--text-muted)" stroke-width="1.4"/>
+              <path id="strat" fill="none" stroke="var(--primary)" stroke-width="1.6"/>
+            </svg>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <!-- drawdown -->
+            <div class="b-card" style="padding:14px 16px;">
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Drawdown</div>
+              <svg viewBox="0 0 400 100" style="width:100%;height:100px;">
+                <line x1="20" y1="20" x2="380" y2="20" stroke="var(--border)" stroke-width="0.5"/>
+                <line x1="20" y1="20" x2="20" y2="90" stroke="var(--border)" stroke-width="0.5"/>
+                <text x="14" y="24" font-family="Geist Mono" font-size="9" fill="var(--text-muted)" text-anchor="end">0%</text>
+                <text x="14" y="92" font-family="Geist Mono" font-size="9" fill="var(--text-muted)" text-anchor="end">-15%</text>
+                <path id="dd" fill="color-mix(in oklab, var(--danger) 18%, transparent)" stroke="var(--danger)" stroke-width="1"/>
+              </svg>
+            </div>
+
+            <!-- monthly returns heatmap -->
+            <div class="b-card" style="padding:14px 16px;">
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px;">Monthly returns</div>
+              <div id="monthly" style="display:grid;grid-template-columns:30px repeat(12,1fr);gap:2px;font-family:'Geist Mono',monospace;font-size:9px;"></div>
+            </div>
+          </div>
+
+          <!-- trades -->
+          <div class="b-card" style="overflow:hidden;">
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;display:flex;align-items:center;gap:10px;">
+              Trade list
+              <span class="chip">412 trades</span>
+              <div style="margin-left:auto;display:flex;gap:6px;">
+                <input class="input" placeholder="Filter…" style="font-size:11px;width:140px;"/>
+                <button class="btn btn-sm"><i data-lucide="download"></i> CSV</button>
+              </div>
+            </div>
+            <div class="trade-row" style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;background:var(--bg-elev-1);">
+              <span>#</span><span>Ticker</span><span>Side</span><span>Entry</span><span>Exit</span><span>Bars</span><span style="text-align:right;">$ P/L</span><span style="text-align:right;">% P/L</span><span>Equity curve</span>
+            </div>
+            <div id="trades"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('backtest', { crumbs: ['Research', 'Backtest', 'EMA crossover'] });
+
+  // equity curve
+  let s = 13, eq = 100, bench = 100, eqs = [], bs = [];
+  for (let i = 0; i < 200; i++) {
+    s = (s * 9301 + 49297) % 233280;
+    eq *= 1 + ((s / 233280 - 0.46) * 0.04);
+    s = (s * 9301 + 49297) % 233280;
+    bench *= 1 + ((s / 233280 - 0.48) * 0.025);
+    eqs.push(eq); bs.push(bench);
+  }
+  const xS = (i) => 40 + (i / 199) * 840;
+  const eqMin = 100, eqMax = 320;
+  const yS = (v) => 190 - ((v - eqMin) / (eqMax - eqMin)) * 170;
+  document.getElementById('strat').setAttribute('d', eqs.map((y, i) => `${i === 0 ? 'M' : 'L'}${xS(i).toFixed(1)},${yS(y).toFixed(1)}`).join(' '));
+  document.getElementById('bench').setAttribute('d', bs.map((y, i) => `${i === 0 ? 'M' : 'L'}${xS(i).toFixed(1)},${yS(y).toFixed(1)}`).join(' '));
+
+  // drawdown
+  let peak = eqs[0], dds = eqs.map(v => { peak = Math.max(peak, v); return (v - peak) / peak; });
+  const xD = (i) => 20 + (i / 199) * 360;
+  const yD = (v) => 20 + (-v / 0.15) * 70;
+  let ddPath = `M${xD(0)},20 ` + dds.map((v, i) => `L${xD(i).toFixed(1)},${yD(v).toFixed(1)}`).join(' ') + ` L${xD(199)},20 Z`;
+  document.getElementById('dd').setAttribute('d', ddPath);
+
+  // monthly heatmap
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const years = [2020, 2021, 2022, 2023, 2024, 2025];
+  let mh = '<div></div>' + months.map(m => `<div style="text-align:center;color:var(--text-muted);">${m}</div>`).join('');
+  let s2 = 7;
+  for (const y of years) {
+    mh += `<div style="color:var(--text-muted);">${y}</div>`;
+    for (let i = 0; i < 12; i++) {
+      s2 = (s2 * 9301 + 49297) % 233280;
+      const v = (s2 / 233280 - 0.45) * 16;
+      const c = v >= 0 ? `color-mix(in oklab, var(--success) ${Math.min(80, Math.abs(v) * 8)}%, transparent)` : `color-mix(in oklab, var(--danger) ${Math.min(80, Math.abs(v) * 8)}%, transparent)`;
+      mh += `<div style="background:${c};color:var(--text);text-align:center;padding:3px 0;border-radius:2px;">${v.toFixed(1)}</div>`;
+    }
+  }
+  document.getElementById('monthly').innerHTML = mh;
+
+  // trades
+  const tickers = ['SPY','QQQ','AAPL'];
+  let s3 = 21, html = '';
+  for (let i = 1; i <= 14; i++) {
+    s3 = (s3 * 9301 + 49297) % 233280;
+    const pl = ((s3 / 233280 - 0.45) * 1800);
+    const cls = pl >= 0 ? 't-pos' : 't-neg';
+    s3 = (s3 * 9301 + 49297) % 233280;
+    const t = tickers[Math.floor((s3/233280) * 3)];
+    s3 = (s3 * 9301 + 49297) % 233280;
+    const side = (s3/233280) > 0.5 ? 'LONG' : 'SHORT';
+    s3 = (s3 * 9301 + 49297) % 233280;
+    const bars = Math.floor((s3/233280) * 18) + 2;
+    s3 = (s3 * 9301 + 49297) % 233280;
+    const entry = 200 + (s3/233280) * 200;
+    s3 = (s3 * 9301 + 49297) % 233280;
+    const exit = entry * (1 + (s3/233280 - 0.45) * 0.06);
+    const pct = ((exit - entry)/entry) * 100 * (side === 'LONG' ? 1 : -1);
+    html += `<div class="trade-row">
+      <span class="mono t-muted">#${i.toString().padStart(3,'0')}</span>
+      <span style="font-weight:500;">${t}</span>
+      <span class="chip ${side === 'LONG' ? 'chip-info' : ''}" style="height:18px;font-size:9px;">${side}</span>
+      <span class="mono">${entry.toFixed(2)}</span>
+      <span class="mono">${exit.toFixed(2)}</span>
+      <span class="mono t-muted">${bars}</span>
+      <span class="mono ${cls}" style="text-align:right;">${pl >= 0 ? '+' : ''}$${Math.abs(pl).toFixed(0)}</span>
+      <span class="mono ${cls}" style="text-align:right;">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>
+      <span>${spark(walk(i+50, 30, 1.5), { w: 120, h: 18 })}</span>
+    </div>`;
+  }
+  document.getElementById('trades').innerHTML = html;
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

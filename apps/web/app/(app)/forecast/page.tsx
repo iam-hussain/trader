@@ -1,8 +1,17 @@
+import { Topbar } from "@/components/Topbar";
+
 export default function ForecastPage() {
   return (
-    <div className="space-y-4 max-w-4xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Forecast</h1>
-      <div className="card p-4 text-sm text-fg-muted">Phase 5 — Prophet, ARIMA + GARCH, replay mode.</div>
-    </div>
+    <>
+      <Topbar crumbs={["Markets", "Forecast"]} />
+      <div className="page max-w-[1100px]">
+        <div className="b-card p-4 text-[12px] text-fg-muted leading-[1.6]">
+          Phase 5: Prophet next-week directional forecast with confidence bands,
+          ARIMA + GARCH volatility forecast, and pattern recognition over recent
+          candles. &ldquo;Replay mode&rdquo; lets you re-run the engine on
+          historical data.
+        </div>
+      </div>
+    </>
   );
 }

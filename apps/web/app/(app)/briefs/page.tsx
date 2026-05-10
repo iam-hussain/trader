@@ -1,12 +1,38 @@
+import { Topbar } from "@/components/Topbar";
+import { BriefTile } from "@/components/BriefTile";
+
 export default function BriefsPage() {
   return (
-    <div className="space-y-4 max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Briefs</h1>
-      <div className="card p-4 text-sm text-fg-muted">
-        Briefs land here in Phase 3. The morning, mid-day, and post-market reports will list
-        per-ticker LLM-generated trade ideas with entry / target / stop / qty / R:R and a one-click
-        "Stage Order" button.
+    <>
+      <Topbar crumbs={["Workspace", "Briefs"]} />
+      <div className="page max-w-[1100px]">
+        <div className="grid grid-cols-3 gap-3">
+          <BriefTile
+            status="done"
+            session="PRE-MARKET"
+            scheduledAt="08:00 ET"
+            summary="Phase 3 brings real LLM-generated briefs. This tile renders the design today."
+            chips={[{ label: "Phase 3", tone: "info" }]}
+          />
+          <BriefTile
+            status="live"
+            session="MID-DAY"
+            scheduledAt="12:00 ET"
+            inLabel="upcoming"
+            chips={[{ label: "auto-run on" }]}
+          />
+          <BriefTile
+            status="queued"
+            session="POST-MARKET"
+            scheduledAt="16:30 ET"
+            chips={[{ label: "incl. tomorrow econ" }]}
+          />
+        </div>
+        <div className="b-card p-4 text-[12px] text-fg-muted">
+          The full per-ticker signal cards, macro context, earnings sidebar, and the
+          &ldquo;re-run with another LLM&rdquo; chip land in Phase 3.
+        </div>
       </div>
-    </div>
+    </>
   );
 }

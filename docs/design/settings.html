@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Settings — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .set-tabs { display: flex; flex-direction: column; gap: 1px; }
+  .set-tab { padding: 9px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+  .set-tab:hover { background: var(--bg-elev-2); color: var(--text); }
+  .set-tab.active { background: var(--bg-elev-2); color: var(--text); font-weight: 500; }
+  .set-tab i { width: 16px; height: 16px; }
+  .row { display: grid; grid-template-columns: 220px 1fr 220px; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .row:last-child { border-bottom: none; }
+  .row .label { font-size: 13px; font-weight: 500; }
+  .row .label .desc { font-weight: 400; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+  .toggle { width: 32px; height: 18px; border-radius: 999px; background: var(--border); position: relative; cursor: pointer; transition: background 0.15s; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: white; transition: left 0.15s; }
+  .toggle.on { background: var(--primary); }
+  .toggle.on::after { left: 16px; }
+  .api-key { font-family: 'Geist Mono', monospace; }
+  .panel-card { background: var(--bg-elev-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+  .live-banner { background: linear-gradient(90deg, color-mix(in oklab, var(--danger) 20%, var(--bg-elev-1)), var(--bg-elev-1)); border: 1px solid color-mix(in oklab, var(--danger) 40%, var(--border)); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+    <div class="page" style="padding:16px 20px;">
+
+      <div>
+        <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em;">Settings</div>
+        <div style="font-size:12px;color:var(--text-muted);">Local config · stored in <span class="mono">~/.trader/config.toml</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;">
+        <div class="set-tabs">
+          <div class="set-tab"><i data-lucide="key-round"></i> API keys</div>
+          <div class="set-tab active"><i data-lucide="cpu"></i> LLM providers</div>
+          <div class="set-tab"><i data-lucide="shield-alert"></i> Risk limits</div>
+          <div class="set-tab"><i data-lucide="bell"></i> Notifications</div>
+          <div class="set-tab"><i data-lucide="plug"></i> Broker</div>
+          <div class="set-tab"><i data-lucide="palette"></i> Display</div>
+          <div class="set-tab"><i data-lucide="database"></i> Data sources</div>
+          <div class="set-tab"><i data-lucide="terminal"></i> Advanced</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- LLM Providers -->
+          <div class="panel-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <strong style="font-size:15px;">LLM providers</strong>
+              <span class="chip">3 active</span>
+              <span class="chip" style="margin-left:auto;">Spend MTD <strong style="color:var(--text);" class="mono">$8.42</strong></span>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Default models for each task. Per-feature overrides below.</div>
+
+            <!-- Provider list -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0;">
+              <div class="b-card" style="padding:10px 12px;border-color:var(--primary);background:color-mix(in oklab, var(--primary) 6%, var(--bg-elev-1));">
+                <div style="display:flex;align-items:center;gap:6px;"><i data-lucide="sparkles" style="color:var(--primary);"></i><strong style="font-size:12px;">Anthropic</strong><span class="chip chip-success" style="margin-left:auto;height:16px;font-size:9px;">connected</span></div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;font-family:'Geist Mono',monospace;">claude-sonnet-4.5</div>
+                <div style="font-size:10px;color:var(--text-muted);font-family:'Geist Mono',monospace;">$3.00 / $15.00 per 1M</div>
+              </div>
+              <div class="b-card" style="padding:10px 12px;">
+                <div style="display:flex;align-items:center;gap:6px;"><i data-lucide="circle"></i><strong style="font-size:12px;">OpenAI</strong><span class="chip chip-success" style="margin-left:auto;height:16px;font-size:9px;">connected</span></div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;font-family:'Geist Mono',monospace;">gpt-4o</div>
+                <div style="font-size:10px;color:var(--text-muted);font-family:'Geist Mono',monospace;">$2.50 / $10.00 per 1M</div>
+              </div>
+              <div class="b-card" style="padding:10px 12px;">
+                <div style="display:flex;align-items:center;gap:6px;"><i data-lucide="hexagon"></i><strong style="font-size:12px;">Google</strong><span class="chip chip-success" style="margin-left:auto;height:16px;font-size:9px;">connected</span></div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;font-family:'Geist Mono',monospace;">gemini-2.5-pro</div>
+                <div style="font-size:10px;color:var(--text-muted);font-family:'Geist Mono',monospace;">$1.25 / $5.00 per 1M</div>
+              </div>
+              <div class="b-card" style="padding:10px 12px;border-style:dashed;">
+                <div style="display:flex;align-items:center;gap:6px;"><i data-lucide="server"></i><strong style="font-size:12px;">Ollama</strong><span class="chip" style="margin-left:auto;height:16px;font-size:9px;">localhost:11434</span></div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:6px;font-family:'Geist Mono',monospace;">llama3.1:70b</div>
+                <div style="font-size:10px;color:var(--text-muted);font-family:'Geist Mono',monospace;">free / local</div>
+              </div>
+            </div>
+
+            <div style="border-top:1px solid var(--border);padding-top:6px;">
+              <div class="row">
+                <div class="label">Default model<div class="desc">Used unless a feature overrides below</div></div>
+                <div><select class="input mono" style="width:280px;"><option>claude-sonnet-4.5 — Anthropic</option><option>gpt-4o — OpenAI</option></select></div>
+                <div></div>
+              </div>
+              <div class="row">
+                <div class="label">Trade signals<div class="desc">Generates entry / target / stop</div></div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <select class="input mono" style="flex:1;"><option>claude-sonnet-4.5</option></select>
+                  <span class="chip">temp 0.3</span>
+                  <span class="chip">tools on</span>
+                </div>
+                <div class="mono" style="font-size:11px;color:var(--text-muted);">~$0.04 / brief</div>
+              </div>
+              <div class="row">
+                <div class="label">News summary<div class="desc">TL;DR per article + sentiment</div></div>
+                <div><select class="input mono" style="width:280px;"><option>claude-haiku-4.5</option><option>gemini-2.5-flash</option></select></div>
+                <div class="mono" style="font-size:11px;color:var(--text-muted);">~$0.002 / article</div>
+              </div>
+              <div class="row">
+                <div class="label">Forecasting commentary<div class="desc">Narrative around Prophet/ARIMA output</div></div>
+                <div><select class="input mono" style="width:280px;"><option>llama3.1:70b — Ollama (free)</option></select></div>
+                <div class="mono" style="font-size:11px;color:var(--text-muted);">free</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Keys -->
+          <div class="panel-card">
+            <strong style="font-size:15px;">API keys</strong>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Stored encrypted in macOS keychain · never sent to logs</div>
+
+            <div class="row">
+              <div class="label">Anthropic<div class="desc">For Claude models</div></div>
+              <div style="display:flex;gap:6px;">
+                <input class="input api-key" value="sk-ant-•••••••••••••••••••••••••••••H7K2" style="flex:1;"/>
+                <button class="btn btn-sm" aria-label="Reveal"><i data-lucide="eye"></i></button>
+                <button class="btn btn-sm">Validate</button>
+              </div>
+              <span class="chip chip-success">valid · 4d ago</span>
+            </div>
+            <div class="row">
+              <div class="label">OpenAI</div>
+              <div style="display:flex;gap:6px;">
+                <input class="input api-key" value="sk-•••••••••••••••••••••••••••••aB9P" style="flex:1;"/>
+                <button class="btn btn-sm"><i data-lucide="eye"></i></button>
+                <button class="btn btn-sm">Validate</button>
+              </div>
+              <span class="chip chip-success">valid</span>
+            </div>
+            <div class="row">
+              <div class="label">Google AI</div>
+              <div style="display:flex;gap:6px;">
+                <input class="input api-key" value="AIza•••••••••••••••••••••••••••••" style="flex:1;"/>
+                <button class="btn btn-sm"><i data-lucide="eye"></i></button>
+                <button class="btn btn-sm">Validate</button>
+              </div>
+              <span class="chip chip-success">valid</span>
+            </div>
+            <div class="row">
+              <div class="label">FRED<div class="desc">stlouisfed.org · macro data</div></div>
+              <div style="display:flex;gap:6px;"><input class="input api-key" value="•••••••••••••••" style="flex:1;"/><button class="btn btn-sm"><i data-lucide="eye"></i></button><button class="btn btn-sm">Validate</button></div>
+              <span class="chip chip-success">valid</span>
+            </div>
+            <div class="row">
+              <div class="label">NewsAPI</div>
+              <div style="display:flex;gap:6px;"><input class="input api-key" value="" placeholder="paste key" style="flex:1;"/><button class="btn btn-sm"><i data-lucide="eye"></i></button><button class="btn btn-sm">Validate</button></div>
+              <span class="chip chip-warn">missing</span>
+            </div>
+            <div class="row">
+              <div class="label">SEC EDGAR User-Agent<div class="desc">Required by EDGAR ToS</div></div>
+              <div><input class="input mono" value="trader-helper/1.0 trader@local.dev" style="width:100%;"/></div>
+              <span class="chip chip-success">set</span>
+            </div>
+          </div>
+
+          <!-- Risk limits -->
+          <div class="panel-card">
+            <strong style="font-size:15px;">Risk limits</strong>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Hit any of these and trading auto-pauses — orders disabled with explanation</div>
+
+            <div class="row">
+              <div class="label">Account size<div class="desc">For % calculations</div></div>
+              <div style="display:flex;gap:6px;align-items:center;"><input class="input mono" value="100,000" style="width:140px;"/><span class="chip">USD</span></div>
+              <div></div>
+            </div>
+            <div class="row">
+              <div class="label">Max risk per trade</div>
+              <div style="display:flex;gap:6px;align-items:center;"><input class="input mono" value="1.0" style="width:80px;"/><span style="color:var(--text-muted);">% of equity = </span><span class="mono" style="color:var(--text);">$1,000</span></div>
+              <div></div>
+            </div>
+            <div class="row">
+              <div class="label">Max daily loss</div>
+              <div style="display:flex;gap:6px;align-items:center;"><input class="input mono" value="3.0" style="width:80px;"/><span style="color:var(--text-muted);">% of equity</span><span class="chip chip-warn" style="margin-left:6px;">trading paused at limit</span></div>
+              <div></div>
+            </div>
+            <div class="row">
+              <div class="label">Max trades per day</div>
+              <div><input class="input mono" value="5" style="width:80px;"/></div>
+              <div></div>
+            </div>
+            <div class="row">
+              <div class="label">Event blackout<div class="desc">Block staging around scheduled releases</div></div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">FOMC announcements</span><span class="chip" style="margin-left:auto;">±15 min</span></div>
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">CPI release</span><span class="chip" style="margin-left:auto;">±30 min</span></div>
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">NFP release</span><span class="chip" style="margin-left:auto;">±30 min</span></div>
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle" data-toggle></div><span style="font-size:12px;">Ticker earnings (positions held)</span><span class="chip" style="margin-left:auto;">block 24h prior</span></div>
+              </div>
+              <div></div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="panel-card">
+            <strong style="font-size:15px;">Notifications</strong>
+            <div class="row">
+              <div class="label">Telegram bot<div class="desc">Realtime alerts to phone</div></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><input class="input mono" value="bot8472•••••" placeholder="Bot token"/><input class="input mono" value="-100192847•••" placeholder="Chat ID"/></div>
+              <span class="chip chip-success">test sent · 2h ago</span>
+            </div>
+            <div class="row">
+              <div class="label">SMTP email<div class="desc">For end-of-day digests</div></div>
+              <div style="display:grid;grid-template-columns:1fr 80px;gap:6px;"><input class="input mono" value="smtp.fastmail.com"/><input class="input mono" value="587"/></div>
+              <span class="chip chip-success">connected</span>
+            </div>
+            <div class="row">
+              <div class="label">Channels</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">New signals</span><div class="seg" style="margin-left:auto;font-size:10px;"><button class="active">in-app</button><button class="active">telegram</button><button>email</button></div></div>
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">Order fills</span><div class="seg" style="margin-left:auto;font-size:10px;"><button class="active">in-app</button><button class="active">telegram</button><button>email</button></div></div>
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">Price alerts</span><div class="seg" style="margin-left:auto;font-size:10px;"><button class="active">in-app</button><button class="active">telegram</button><button>email</button></div></div>
+                <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" data-toggle></div><span style="font-size:12px;">Errors</span><div class="seg" style="margin-left:auto;font-size:10px;"><button class="active">in-app</button><button>telegram</button><button class="active">email</button></div></div>
+              </div>
+              <div></div>
+            </div>
+          </div>
+
+          <!-- Broker -->
+          <div class="panel-card">
+            <strong style="font-size:15px;">Broker · Interactive Brokers</strong>
+            <div class="live-banner" style="margin:10px 0 4px;">
+              <i data-lucide="alert-octagon" style="color:var(--danger);width:18px;height:18px;"></i>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:13px;">Live account selected</div>
+                <div style="font-size:11px;color:var(--text-muted);">Orders fire on real markets the moment you confirm. Type <span class="mono" style="color:var(--text);">SWITCH-LIVE</span> to keep, or use the toggle below to revert to paper.</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">Mode</div>
+              <div class="seg" style="width:280px;"><button style="flex:1;">Paper · DU8472K</button><button class="active" style="flex:1;color:var(--danger);font-weight:600;">Live · U2841P</button></div>
+              <span class="chip" style="background:color-mix(in oklab, var(--danger) 12%, transparent);border-color:color-mix(in oklab, var(--danger) 30%, var(--border));color:var(--danger);">type-to-confirm on switch</span>
+            </div>
+            <div class="row">
+              <div class="label">Gateway host</div>
+              <div style="display:grid;grid-template-columns:1fr 100px;gap:6px;"><input class="input mono" value="127.0.0.1"/><input class="input mono" value="7497"/></div>
+              <span class="chip chip-success">connected · ping 4ms</span>
+            </div>
+            <div class="row">
+              <div class="label">Default order type<div class="desc">For staged trades</div></div>
+              <div><select class="input mono" style="width:280px;"><option>Bracket (LMT entry + TP + SL)</option></select></div>
+              <div></div>
+            </div>
+            <div class="row">
+              <div class="label">Confirmation<div class="desc">How aggressive a confirm prompt</div></div>
+              <div class="seg"><button>Single-click</button><button class="active">Press &amp; hold 1s</button><button>Type-to-confirm</button></div>
+              <div></div>
+            </div>
+          </div>
+
+          <!-- Display -->
+          <div class="panel-card">
+            <strong style="font-size:15px;">Display</strong>
+            <div class="row"><div class="label">Theme</div><div class="seg" style="width:240px;"><button style="flex:1;">Light</button><button class="active" style="flex:1;">Dark</button><button style="flex:1;">System</button></div><div></div></div>
+            <div class="row"><div class="label">Density</div><div class="seg" style="width:240px;"><button class="active" style="flex:1;">Compact</button><button style="flex:1;">Comfortable</button></div><div></div></div>
+            <div class="row"><div class="label">Font size</div><div style="display:flex;gap:8px;align-items:center;width:240px;"><span style="font-size:11px;color:var(--text-muted);">A</span><input type="range" min="12" max="16" value="13" style="flex:1;"/><span style="font-size:14px;color:var(--text-muted);">A</span></div><span class="mono" style="font-size:11px;color:var(--text-muted);">13px</span></div>
+            <div class="row"><div class="label">Default chart timeframe</div><div class="seg"><button>1m</button><button>5m</button><button>15m</button><button class="active">1h</button><button>1D</button></div><div></div></div>
+            <div class="row"><div class="label">Number format<div class="desc">For thousands &amp; decimals</div></div><div class="seg" style="width:240px;"><button class="active" style="flex:1;">1,234.56</button><button style="flex:1;">1.234,56</button></div><div></div></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('settings', { crumbs: ['Settings', 'LLM providers'] });
+  document.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => el.classList.toggle('on')));
+  document.querySelectorAll('.set-tab').forEach(el => el.addEventListener('click', () => {
+    document.querySelectorAll('.set-tab').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+  }));
+  lucide.createIcons();
+</script>
+</body>
+</html>

@@ -11,6 +11,8 @@ import { tickerRoutes } from "./routes/ticker.js";
 import { providersRoutes } from "./routes/providers.js";
 import { briefRoutes } from "./routes/brief.js";
 import { tradingViewWebhookRoute } from "./routes/webhooks.js";
+import { analysisRoutes } from "./routes/analysis.js";
+import { macroRoutes } from "./routes/macro.js";
 import { authPlugin } from "./plugins/auth.js";
 
 export async function buildServer() {
@@ -40,6 +42,8 @@ export async function buildServer() {
   await app.register(settingsRoutes, { prefix: "/api/settings" });
   await app.register(providersRoutes, { prefix: "/api/providers" });
   await app.register(tickerRoutes, { prefix: "/api/ticker" });
+  await app.register(analysisRoutes, { prefix: "/api/analysis" });
+  await app.register(macroRoutes, { prefix: "/api/macro" });
   await app.register(briefRoutes, { prefix: "/api/briefs" });
   await app.register(tradingViewWebhookRoute, { prefix: "/api/webhooks" });
 

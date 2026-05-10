@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Brief · Jan 22 — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .brief-section { display: grid; grid-template-columns: 200px 1fr; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .section-meta { position: sticky; top: 60px; align-self: start; }
+  .ticker-card { background: var(--bg-elev-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: grid; grid-template-columns: 80px 1fr 200px 130px; gap: 16px; align-items: center; }
+  .ticker-card:hover { border-color: var(--border-strong); }
+  .conf-bar { width: 100%; height: 5px; background: var(--bg-elev-3); border-radius: 3px; overflow: hidden; }
+  .conf-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--warning), var(--success)); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;">
+      <div style="padding:0 24px 60px;max-width:1000px;">
+
+        <!-- Brief header -->
+        <div style="padding:24px 0;display:flex;align-items:flex-start;gap:16px;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin-bottom:4px;">Daily Brief</div>
+            <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;">Wednesday · January 22, 2026</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+              <span class="chip chip-info"><i data-lucide="sparkles"></i> claude-sonnet-4.5</span>
+              <span class="chip">2.4k tokens · $0.012</span>
+              <span class="chip">generated 09:38 ET</span>
+              <span class="chip chip-pos"><i data-lucide="check"></i> 6 setups</span>
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+            <span style="font-size:11px;color:var(--text-muted);">Re-run with</span>
+            <div class="seg">
+              <button class="active">claude-sonnet-4.5</button>
+              <button>gpt-4o</button>
+              <button>gemini-2.5</button>
+              <button>llama3.1:70b</button>
+            </div>
+            <button class="btn btn-sm"><i data-lucide="refresh-cw"></i></button>
+            <button class="btn btn-sm"><i data-lucide="share"></i></button>
+          </div>
+        </div>
+
+        <!-- PRE-MARKET -->
+        <div class="brief-section" id="pre">
+          <div class="section-meta">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;">Section 01</div>
+            <div style="font-size:18px;font-weight:600;margin-top:4px;">Pre-market</div>
+            <div style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--text-muted);margin-top:2px;">08:00 ET · done</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;font-size:11px;">
+              <div style="display:flex;justify-content:space-between;"><span class="t-muted">Setups found</span><span class="mono">6</span></div>
+              <div style="display:flex;justify-content:space-between;"><span class="t-muted">Staged</span><span class="mono">3</span></div>
+              <div style="display:flex;justify-content:space-between;"><span class="t-muted">Risk used</span><span class="mono t-pos">0.42%</span></div>
+              <div style="display:flex;justify-content:space-between;"><span class="t-muted">Avg confidence</span><span class="mono">68</span></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="b-card" style="padding:14px 16px;background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 8%, var(--bg-elev-1)), var(--bg-elev-1));">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-weight:500;">Macro · regime risk-on</div>
+              <div style="font-size:13px;line-height:1.6;">
+                Megacap tech leading premarket; semis bid +1.4% on Foxconn / NVDA infrastructure deal. SPY testing 530 pivot — clean break opens 535 retest into Friday's NFP. VIX bleeding to 14.8 (52w 12-22). Watch: <span class="mono">10Y at 4.31%</span> (+3bp) — extension above 4.4 risks a duration reset on growth. Energy underperforms (−0.84% crude). No FOMC blackout active.
+              </div>
+            </div>
+
+            <!-- Ticker cards -->
+            <div class="ticker-card">
+              <div>
+                <div style="font-weight:600;font-size:16px;">NVDA</div>
+                <div style="font-size:10px;color:var(--text-muted);">Nvidia · Tech</div>
+                <div class="chip chip-pos" style="margin-top:6px;">LONG · 2.3R</div>
+              </div>
+              <div>
+                <div style="font-size:12px;line-height:1.55;color:var(--text);">Earnings drift continuation. RS leader vs SMH (+4.2% over 5d), holding above 20EMA on multiple closes. Foxconn news adds incremental DC narrative.</div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <span class="chip">CALL DEBIT 940/960</span>
+                  <span class="chip">Feb 21 · 30d hold</span>
+                  <span class="chip"><i data-lucide="alert-triangle"></i> earnings risk</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:11px;">
+                <span class="t-muted">Entry</span><span style="text-align:right;">932.40</span>
+                <span class="t-muted">Tgt 1</span><span style="text-align:right;" class="t-pos">948.00</span>
+                <span class="t-muted">Tgt 2</span><span style="text-align:right;" class="t-pos">965.00</span>
+                <span class="t-muted">Stop</span><span style="text-align:right;" class="t-neg">918.00</span>
+                <span class="t-muted">Qty</span><span style="text-align:right;">10 ctr</span>
+                <span class="t-muted">Risk</span><span style="text-align:right;">$420</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;justify-content:space-between;font-size:10px;"><span class="t-muted">Confidence</span><span class="mono" style="font-weight:600;">72</span></div>
+                <div class="conf-bar"><span style="width:72%;"></span></div>
+                <button class="btn btn-primary btn-sm" style="margin-top:4px;">Stage order <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">⏎</span></button>
+              </div>
+            </div>
+
+            <div class="ticker-card">
+              <div>
+                <div style="font-weight:600;font-size:16px;">SPY</div>
+                <div style="font-size:10px;color:var(--text-muted);">SPDR S&amp;P 500</div>
+                <div class="chip chip-info" style="margin-top:6px;">HEDGE · 1.7R</div>
+              </div>
+              <div>
+                <div style="font-size:12px;line-height:1.55;">Tail hedge into Friday NFP. Cheap downside; index sitting at upper Bollinger band, RSI 68. Hedge protects long book delta if VIX backs up &gt; 16.</div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <span class="chip">PUT VERTICAL 525/520</span>
+                  <span class="chip">Feb 7 · 14d hold</span>
+                  <span class="chip">portfolio hedge</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:11px;">
+                <span class="t-muted">Entry</span><span style="text-align:right;">1.85</span>
+                <span class="t-muted">Tgt 1</span><span style="text-align:right;" class="t-pos">2.40</span>
+                <span class="t-muted">Tgt 2</span><span style="text-align:right;" class="t-pos">3.40</span>
+                <span class="t-muted">Stop</span><span style="text-align:right;" class="t-neg">0.95</span>
+                <span class="t-muted">Qty</span><span style="text-align:right;">20 ctr</span>
+                <span class="t-muted">Risk</span><span style="text-align:right;">$1,800</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;justify-content:space-between;font-size:10px;"><span class="t-muted">Confidence</span><span class="mono" style="font-weight:600;">58</span></div>
+                <div class="conf-bar"><span style="width:58%;"></span></div>
+                <button class="btn btn-sm" style="margin-top:4px;">Staged <i data-lucide="check"></i></button>
+              </div>
+            </div>
+
+            <div class="ticker-card">
+              <div>
+                <div style="font-weight:600;font-size:16px;">TSLA</div>
+                <div style="font-size:10px;color:var(--text-muted);">Tesla · Cons-Disc</div>
+                <div class="chip chip-neg" style="margin-top:6px;">SHORT · 1.8R</div>
+              </div>
+              <div>
+                <div style="font-size:12px;line-height:1.55;">Lower-high pattern below declining 50MA, volume divergence on Mon bounce. Q4 deliveries miss already priced; technical setup, not fundamental.</div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                  <span class="chip">EQUITY SHORT</span>
+                  <span class="chip">5d hold</span>
+                  <span class="chip">tight stop</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-family:'Geist Mono',monospace;font-size:11px;">
+                <span class="t-muted">Entry</span><span style="text-align:right;">251.20</span>
+                <span class="t-muted">Tgt 1</span><span style="text-align:right;" class="t-pos">242.00</span>
+                <span class="t-muted">Tgt 2</span><span style="text-align:right;" class="t-pos">238.00</span>
+                <span class="t-muted">Stop</span><span style="text-align:right;" class="t-neg">258.40</span>
+                <span class="t-muted">Qty</span><span style="text-align:right;">50 sh</span>
+                <span class="t-muted">Risk</span><span style="text-align:right;">$360</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;justify-content:space-between;font-size:10px;"><span class="t-muted">Confidence</span><span class="mono" style="font-weight:600;">64</span></div>
+                <div class="conf-bar"><span style="width:64%;"></span></div>
+                <button class="btn btn-primary btn-sm" style="margin-top:4px;">Stage order</button>
+              </div>
+            </div>
+
+            <details>
+              <summary style="cursor:pointer;font-size:11px;color:var(--text-muted);padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px;"><i data-lucide="chevron-right"></i> 3 more soft signals · AMD, XOM, NFLX</summary>
+              <div style="font-size:11px;color:var(--text-muted);padding:8px 0;line-height:1.6;">AMD · pre-earn IV crush trade idea, conf 48 · XOM · wait for 110 reclaim, conf 42 · NFLX · earnings tonight, no edge.</div>
+            </details>
+          </div>
+        </div>
+
+        <!-- MID-DAY -->
+        <div class="brief-section" id="mid">
+          <div class="section-meta">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;">Section 02</div>
+            <div style="font-size:18px;font-weight:600;margin-top:4px;">Mid-day</div>
+            <div style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--text-muted);margin-top:2px;">12:00 ET · pending</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;font-size:11px;">
+              <div class="t-muted">Auto-runs in 2h 19m. Re-evaluates open positions and scans for momentum continuation / overstretched setups.</div>
+              <button class="btn btn-sm" style="margin-top:4px;">Run early <span class="kbd">⇧M</span></button>
+            </div>
+          </div>
+          <div>
+            <div class="b-card" style="padding:24px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;color:var(--text-muted);font-size:13px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <i data-lucide="clock" style="color:var(--text-dim);"></i>
+                <span style="font-weight:500;color:var(--text);">Mid-day brief queued</span>
+              </div>
+              <div>Will run at 12:00 ET. You can preview a partial scan now using current positions and live tape.</div>
+              <button class="btn btn-sm">Preview · partial scan</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- POST-MARKET -->
+        <div class="brief-section" id="post" style="border-bottom:none;">
+          <div class="section-meta">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;">Section 03</div>
+            <div style="font-size:18px;font-weight:600;margin-top:4px;">Post-market</div>
+            <div style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--text-muted);margin-top:2px;">16:30 ET · queued</div>
+          </div>
+          <div>
+            <div class="b-card" style="padding:24px;color:var(--text-muted);font-size:13px;">
+              <i data-lucide="moon" style="color:var(--text-dim);"></i> Daily review will summarize today's P/L attribution, confirm what worked, surface tomorrow's setups, and prompt journal entries.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sidebar: events + econ -->
+      <aside style="border-left:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:16px;position:sticky;top:44px;align-self:start;">
+        <div>
+          <div class="h-section" style="margin-bottom:8px;">Catalysts today</div>
+          <div class="b-card" style="overflow:hidden;">
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+              <span class="chip chip-warn">CPI</span>
+              <div style="flex:1;font-size:11px;"><div style="font-weight:500;">Dec CPI YoY</div><div class="t-muted">cons 3.2% · prior 3.1%</div></div>
+              <span class="mono" style="font-size:11px;">08:30</span>
+            </div>
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+              <span class="chip">FED</span>
+              <div style="flex:1;font-size:11px;"><div style="font-weight:500;">Beige Book</div><div class="t-muted">8 districts</div></div>
+              <span class="mono" style="font-size:11px;">14:00</span>
+            </div>
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
+              <span class="chip">FED</span>
+              <div style="flex:1;font-size:11px;"><div style="font-weight:500;">Williams speech</div><div class="t-muted">FOMC voter</div></div>
+              <span class="mono" style="font-size:11px;">15:30</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="h-section" style="margin-bottom:8px;">Earnings · today</div>
+          <div class="b-card" style="overflow:hidden;">
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:50px 1fr 60px;gap:8px;align-items:center;font-size:11px;">
+              <span style="font-family:'Geist Mono',monospace;font-weight:600;">NFLX</span>
+              <span class="t-muted">cons EPS 4.21 · IV +8.2%</span>
+              <span class="mono" style="text-align:right;">AMC</span>
+            </div>
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:50px 1fr 60px;gap:8px;align-items:center;font-size:11px;">
+              <span style="font-family:'Geist Mono',monospace;font-weight:600;">UAL</span>
+              <span class="t-muted">cons EPS 1.55 · IV +5.1%</span>
+              <span class="mono" style="text-align:right;">AMC</span>
+            </div>
+            <div style="padding:10px 12px;display:grid;grid-template-columns:50px 1fr 60px;gap:8px;align-items:center;font-size:11px;">
+              <span style="font-family:'Geist Mono',monospace;font-weight:600;">DAL</span>
+              <span class="t-muted">cons EPS 1.32 · IV +3.8%</span>
+              <span class="mono" style="text-align:right;">BMO</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="h-section" style="margin-bottom:8px;">Tomorrow</div>
+          <div class="b-card" style="padding:12px;font-size:11px;color:var(--text-muted);line-height:1.6;">
+            <div style="color:var(--text);font-weight:500;">Initial jobless claims · 08:30</div>
+            <div>Existing home sales · 10:00</div>
+            <div>Fed Vice Chair Jefferson · 14:00</div>
+            <div style="color:var(--text);font-weight:500;margin-top:6px;">Earnings · INTC, ABT, AAL, V</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="h-section" style="margin-bottom:8px;">Brief usage · today</div>
+          <div class="b-card" style="padding:12px;font-size:11px;">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:6px;font-family:'Geist Mono',monospace;">
+              <span class="t-muted">claude-sonnet</span><span>2,431 tok · $0.012</span>
+              <span class="t-muted">gpt-4o</span><span>0 tok · $0.000</span>
+              <span class="t-muted">embeddings</span><span>14k · $0.001</span>
+              <span class="t-muted" style="border-top:1px solid var(--border);padding-top:6px;">Today total</span><span style="border-top:1px solid var(--border);padding-top:6px;font-weight:600;">$0.013</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('briefs', { crumbs: ['Workspace', 'Briefs', 'Jan 22'], topbarRight: `
+    <div class="seg">
+      <button>Yesterday</button>
+      <button class="active">Jan 22</button>
+      <button>Tomorrow</button>
+    </div>
+    <button class="btn btn-sm"><i data-lucide="calendar"></i> Pick date</button>
+  ` });
+  lucide.createIcons();
+</script>
+</body>
+</html>

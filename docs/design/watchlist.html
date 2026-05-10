@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<title>Watchlist — Trader</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  .wl-row { display: grid; grid-template-columns: 22px 60px 80px 100px 80px 80px 60px 60px 70px 60px 60px 80px; align-items: center; padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; cursor: pointer; }
+  .wl-row:hover { background: var(--bg-elev-2); }
+  .wl-row .h { color: var(--text-muted); cursor: grab; opacity: 0; }
+  .wl-row:hover .h { opacity: 1; }
+  .col-h { display: grid; grid-template-columns: 22px 60px 80px 100px 80px 80px 60px 60px 70px 60px 60px 80px; padding: 8px 12px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); background: var(--bg-elev-1); position:sticky; top: 0; z-index: 2; }
+  .alert-pop { position: fixed; top: 100px; right: 30px; width: 320px; background: var(--bg-elev-1); border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 30; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main>
+    <div id="topbar" class="topbar"></div>
+
+    <div class="page" style="padding:16px 20px;">
+
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div>
+          <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em;">Watchlist</div>
+          <div style="font-size:12px;color:var(--text-muted);">24 tickers · 6 with active alerts</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+          <div class="seg">
+            <button class="active">Default</button>
+            <button>Megacaps</button>
+            <button>Semis</button>
+            <button>Earnings wk</button>
+            <button>+</button>
+          </div>
+          <button class="btn btn-sm"><i data-lucide="filter"></i></button>
+          <button class="btn btn-sm"><i data-lucide="settings-2"></i></button>
+          <button class="btn btn-primary btn-sm"><i data-lucide="plus"></i> Add ticker <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border-color:transparent;">A</span></button>
+        </div>
+      </div>
+
+      <!-- Stats strip -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+        <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">Gainers</div><div class="mono" style="font-size:18px;font-weight:600;color:var(--success);margin-top:2px;">14</div></div>
+        <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">Losers</div><div class="mono" style="font-size:18px;font-weight:600;color:var(--danger);margin-top:2px;">8</div></div>
+        <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">Avg %</div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;color:var(--success);">+0.42%</div></div>
+        <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">News today</div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">82</div></div>
+        <div class="b-card" style="padding:10px 12px;"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">Earnings this week</div><div class="mono" style="font-size:18px;font-weight:600;margin-top:2px;">7</div></div>
+      </div>
+
+      <div class="b-card" style="overflow:hidden;">
+        <div class="col-h">
+          <div></div>
+          <div>Ticker</div>
+          <div style="text-align:right;">Price</div>
+          <div>30d</div>
+          <div style="text-align:right;">Day %</div>
+          <div style="text-align:right;"><span class="tip" data-tip="Volume vs 30-day average">Vol/Avg</span></div>
+          <div style="text-align:right;"><span class="tip" data-tip="IV Rank: where current IV sits in 52w range">IV rk</span></div>
+          <div style="text-align:right;">RSI</div>
+          <div style="text-align:right;">P/C</div>
+          <div style="text-align:right;">News</div>
+          <div style="text-align:right;">Alerts</div>
+          <div></div>
+        </div>
+        <div id="rows"></div>
+      </div>
+
+    </div>
+
+    <!-- Alert config popover -->
+    <div class="alert-pop">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+        <span style="font-weight:600;font-size:13px;">Alert · NVDA</span>
+        <span class="chip" style="margin-left:auto;">2 active</span>
+        <button class="btn btn-ghost btn-sm" aria-label="Close" style="padding:0;width:22px;justify-content:center;"><i data-lucide="x"></i></button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:4px;">Active</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:11px;">
+              <i data-lucide="trending-up" style="color:var(--success);"></i>
+              <span style="flex:1;">Price <strong>≥ 945.00</strong></span>
+              <button class="btn btn-ghost btn-sm" style="padding:0;width:22px;"><i data-lucide="x"></i></button>
+            </div>
+            <div style="background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:11px;">
+              <i data-lucide="zap" style="color:var(--warning);"></i>
+              <span style="flex:1;">Headline contains <strong>"Foxconn"</strong></span>
+              <button class="btn btn-ghost btn-sm" style="padding:0;width:22px;"><i data-lucide="x"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:500;margin-bottom:6px;">New alert</div>
+          <div class="seg" style="width:100%;font-size:10px;">
+            <button class="active" style="flex:1;">Price</button>
+            <button style="flex:1;">IV</button>
+            <button style="flex:1;">News</button>
+            <button style="flex:1;">Tech</button>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:6px;margin-top:8px;font-size:11px;align-items:center;">
+            <div class="seg" style="grid-column:1/-1;"><button class="active" style="flex:1;">≥</button><button style="flex:1;">≤</button><button style="flex:1;">crosses</button></div>
+            <span style="color:var(--text-muted);">Price</span>
+            <input class="input mono" placeholder="950.00" style="width:100%;" />
+            <span style="color:var(--text-muted);">Channels</span>
+            <div style="display:flex;gap:4px;">
+              <span class="chip chip-info"><i data-lucide="bell"></i> in-app</span>
+              <span class="chip"><i data-lucide="send"></i> telegram</span>
+              <span class="chip"><i data-lucide="mail"></i> email</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px;justify-content:center;">Add alert</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderChrome('watchlist', { crumbs: ['Markets', 'Watchlist'] });
+
+  const tickers = [
+    { t: 'NVDA', n: 'Nvidia', p: 938.42, c: 2.88, vol: 0.81, iv: 38, rsi: 64, pc: 0.82, news: 12, al: 2, seed: 1 },
+    { t: 'AAPL', n: 'Apple', p: 221.04, c: 1.16, vol: 0.92, iv: 24, rsi: 58, pc: 0.91, news: 8, al: 1, seed: 2 },
+    { t: 'MSFT', n: 'Microsoft', p: 442.10, c: 0.61, vol: 0.78, iv: 21, rsi: 54, pc: 0.74, news: 5, al: 0, seed: 3 },
+    { t: 'GOOGL', n: 'Alphabet', p: 198.20, c: 0.42, vol: 1.04, iv: 28, rsi: 52, pc: 0.88, news: 6, al: 1, seed: 4 },
+    { t: 'AMZN', n: 'Amazon', p: 224.80, c: -0.18, vol: 0.71, iv: 26, rsi: 49, pc: 1.02, news: 3, al: 0, seed: 5 },
+    { t: 'TSLA', n: 'Tesla', p: 249.32, c: -1.22, vol: 1.42, iv: 58, rsi: 38, pc: 1.34, news: 14, al: 1, seed: 6, alert: true },
+    { t: 'META', n: 'Meta', p: 594.20, c: -0.30, vol: 0.88, iv: 31, rsi: 51, pc: 0.78, news: 4, al: 0, seed: 7 },
+    { t: 'AMD', n: 'AMD', p: 184.20, c: 1.84, vol: 1.21, iv: 42, rsi: 62, pc: 0.85, news: 7, al: 1, seed: 8 },
+    { t: 'NFLX', n: 'Netflix', p: 712.40, c: 0.92, vol: 1.84, iv: 51, rsi: 56, pc: 1.10, news: 11, al: 1, seed: 9, earn: true },
+    { t: 'CRM', n: 'Salesforce', p: 318.40, c: 1.21, vol: 0.94, iv: 27, rsi: 60, pc: 0.82, news: 2, al: 0, seed: 10 },
+    { t: 'AVGO', n: 'Broadcom', p: 1612.10, c: 2.10, vol: 1.08, iv: 34, rsi: 67, pc: 0.71, news: 4, al: 0, seed: 11 },
+    { t: 'QCOM', n: 'Qualcomm', p: 178.40, c: 0.52, vol: 0.84, iv: 29, rsi: 53, pc: 0.96, news: 3, al: 0, seed: 12 },
+    { t: 'INTC', n: 'Intel', p: 24.80, c: -2.40, vol: 1.62, iv: 48, rsi: 32, pc: 1.42, news: 9, al: 1, seed: 13, earn: true },
+    { t: 'PLTR', n: 'Palantir', p: 78.20, c: 4.20, vol: 2.10, iv: 62, rsi: 71, pc: 0.64, news: 8, al: 0, seed: 14 },
+    { t: 'COIN', n: 'Coinbase', p: 248.10, c: 1.81, vol: 1.41, iv: 71, rsi: 64, pc: 1.18, news: 5, al: 0, seed: 15 },
+    { t: 'SPY', n: 'S&P 500', p: 528.40, c: 0.42, vol: 0.84, iv: 14, rsi: 58, pc: 1.42, news: 0, al: 0, seed: 16 },
+    { t: 'QQQ', n: 'Nasdaq 100', p: 452.18, c: 0.61, vol: 0.91, iv: 18, rsi: 60, pc: 1.21, news: 0, al: 0, seed: 17 },
+    { t: 'XOM', n: 'Exxon', p: 109.40, c: -0.84, vol: 1.04, iv: 22, rsi: 41, pc: 1.12, news: 2, al: 1, seed: 18 },
+  ];
+
+  document.getElementById('rows').innerHTML = tickers.map(x => {
+    const cs = x.c >= 0 ? 'var(--success)' : 'var(--danger)';
+    const rsi_color = x.rsi >= 70 ? 'var(--warning)' : x.rsi <= 30 ? 'var(--warning)' : 'var(--text)';
+    return `<div class="wl-row" ${x.alert ? 'style="background:color-mix(in oklab, var(--warning) 5%, transparent);"' : ''}>
+      <span class="h"><i data-lucide="grip-vertical"></i></span>
+      <span style="font-weight:600;">${x.t}${x.earn ? ' <span class="chip chip-warn" style="height:14px;font-size:9px;margin-left:2px;">E</span>' : ''}</span>
+      <span class="mono" style="text-align:right;">${x.p.toFixed(2)}</span>
+      <span>${spark(walk(x.seed, 30, x.c * 0.04), { w: 90, h: 22 })}</span>
+      <span class="mono" style="text-align:right;color:${cs};">${x.c >= 0 ? '+' : ''}${x.c.toFixed(2)}%</span>
+      <span class="mono" style="text-align:right;color:${x.vol > 1.5 ? 'var(--warning)' : x.vol < 0.7 ? 'var(--text-muted)' : 'var(--text)'};">${x.vol.toFixed(2)}x</span>
+      <span class="mono" style="text-align:right;">${x.iv}</span>
+      <span class="mono" style="text-align:right;color:${rsi_color};">${x.rsi}</span>
+      <span class="mono" style="text-align:right;">${x.pc.toFixed(2)}</span>
+      <span class="mono" style="text-align:right;color:${x.news > 8 ? 'var(--warning)' : 'var(--text-muted)'};">${x.news}</span>
+      <span class="mono" style="text-align:right;color:${x.al > 0 ? 'var(--primary)' : 'var(--text-dim)'};">${x.al > 0 ? `<i data-lucide="bell" style="vertical-align:-2px;"></i> ${x.al}` : '—'}</span>
+      <span style="display:flex;gap:4px;justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" aria-label="Open chart" title="Open chart"><i data-lucide="line-chart"></i></button>
+        <button class="btn btn-ghost btn-sm" aria-label="Stage trade" title="Stage trade"><i data-lucide="zap"></i></button>
+      </span>
+    </div>`;
+  }).join('');
+
+  lucide.createIcons();
+</script>
+</body>
+</html>
