@@ -1,2 +1,3 @@
-export * from "./types";
-export * from "./ibkr";
+export * from "./types.js";
+export * from "./ibkr.js";
+export { getBrokerAdapter, resetBrokerAdapter } from "./singleton.js";

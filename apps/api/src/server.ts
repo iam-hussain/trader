@@ -16,6 +16,8 @@ import { macroRoutes } from "./routes/macro.js";
 import { journalRoutes } from "./routes/journal.js";
 import { alertRoutes } from "./routes/alerts.js";
 import { sseRoutes } from "./routes/sse.js";
+import { ordersRoutes } from "./routes/orders.js";
+import { positionsRoutes } from "./routes/positions.js";
 import { authPlugin } from "./plugins/auth.js";
 import { startJobs, stopJobs } from "./jobs/index.js";
 
@@ -52,6 +54,8 @@ export async function buildServer() {
   await app.register(journalRoutes, { prefix: "/api/journal" });
   await app.register(alertRoutes, { prefix: "/api/alerts" });
   await app.register(sseRoutes, { prefix: "/api/sse" });
+  await app.register(ordersRoutes, { prefix: "/api/orders" });
+  await app.register(positionsRoutes, { prefix: "/api/positions" });
   await app.register(tradingViewWebhookRoute, { prefix: "/api/webhooks" });
 
   return app;

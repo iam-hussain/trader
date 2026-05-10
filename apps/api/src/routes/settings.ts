@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "@trader/db";
+import { resetBrokerAdapter } from "@trader/brokers";
 
 const SettingsPatch = z.object({
   accountSizeUsd: z.number().positive().optional(),
@@ -37,5 +38,33 @@ export async function settingsRoutes(app: FastifyInstance) {
       create: { userId: req.userId, ...body.data },
       update: body.data,
     });
+  });
+
+  // Switch broker mode (paper <-> live). Live requires explicit "LIVE" confirm
+  // text — the web UI surfaces this as a type-to-confirm modal.
+  const SwitchModeBody = z.object({
+    mode: z.enum(["paper", "live"]),
+    confirmText: z.string().optional(),
+  });
+  app.post("/broker/switch-mode", async (req, reply) => {
+    const body = SwitchModeBody.safeParse(req.body);
+    if (!body.success) {
+      return reply.code(400).send({ error: body.error.flatten() });
+    }
+    if (body.data.mode === "live" && body.data.confirmText !== "LIVE") {
+      return reply
+        .code(400)
+        .send({ error: "confirm_required", message: 'confirmText must be "LIVE"' });
+    }
+
+    await prisma.setting.upsert({
+      where: { userId: req.userId },
+      create: { userId: req.userId, ibkrMode: body.data.mode },
+      update: { ibkrMode: body.data.mode },
+    });
+    // Force the singleton to rebuild with the new config on next access.
+    resetBrokerAdapter();
+    req.log.info({ mode: body.data.mode }, "broker mode switched");
+    return { mode: body.data.mode };
   });
 }

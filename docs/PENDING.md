@@ -56,24 +56,49 @@ Remaining for Phase 3+ (carry-over):
 - [ ] **Quarterly edge analysis** chart (P/L by setup tag)
 - [ ] **Screenshot drop zone** in journal entries
 
-## Phase 4 (execution) — to do
+## Phase 4 (execution) — in progress
 
-- [ ] **Full IbkrAdapter** in `packages/brokers/src/ibkr.ts`:
-  - connect to TWS / IB Gateway via @stoqey/ib
-  - account summary (buying power, daily P/L)
-  - place bracket order (parent limit + OCO TP/SL)
-  - cancel single + cancel all
-  - position update subscription → SSE → UI
-- [ ] **Order staging UI** at `/orders`:
-  - staged-orders queue with full risk profile per row
-  - Confirm + Edit + Cancel per row
-  - kill switch (red, 2s hold-to-confirm) with optional flatten toggle
-  - today's risk header
-- [ ] **Server-side risk middleware** rejecting confirmed orders that violate
-      caps (UI cannot bypass).
-- [ ] **Live-account banner** + type-to-confirm modal on paper→live switch.
-- [ ] **Real-time positions panel** with live P/L (SSE feed).
-- [ ] **Order history view** with filters.
+Shipped (or in this commit batch):
+- [x] **Full IbkrAdapter** in `packages/brokers/src/ibkr.ts` — @stoqey/ib
+      connect/disconnect with auto-reconnect, OCA bracket placement,
+      cancel single + cancel all, getPositions, getDailyPnl, EventEmitter
+      for fill/status/position updates
+- [x] **Broker singleton** in `packages/brokers/src/singleton.ts`
+- [x] **Order service** at `apps/api/src/services/order-service.ts` —
+      stage / confirm / cancel / cancel-all / flatten-all + signal→bracket
+      mapping
+- [x] **Risk middleware** at `apps/api/src/middleware/risk-middleware.ts` —
+      runRiskCheck called on every confirm (UI can't bypass)
+- [x] **Order events bus** at `apps/api/src/services/order-events.ts` —
+      Redis pubsub of order.staged / .confirmed / .fill / .cancel /
+      .reject / .update + positions.update
+- [x] **Order routes** `/api/orders/{stage,:id/confirm,:id/cancel,
+      cancel-all,flatten-all,:id/edit,history}`
+- [x] **Positions routes** `/api/positions`, `/api/positions/pnl`,
+      `/api/positions/broker/{status,connect,disconnect}`
+- [x] **Positions publisher job** — 3s polling loop publishing changed
+      positions to SSE channel
+- [x] **Live mode switch route** at `POST /api/settings/broker/switch-mode`
+      requiring `confirmText === "LIVE"` for paper→live
+- [x] **Web UI** — orders page rebuilt with KillSwitch (top-right,
+      hold-to-confirm 2s), Flatten (separate hold-to-confirm), StagedOrderRow
+      (Confirm/Edit/Cancel + inline risk-rejection display), PositionsPanel
+      (SSE-subscribed), RiskHeader, LiveBanner, LiveModeModal
+- [x] **Order history page** at `/orders/history`
+- [x] **SignalCard.Stage** wired through `apps/web/lib/orders.ts`
+
+Remaining for Phase 4+:
+- [ ] **Manual market-data subscription** for non-watchlist symbols
+- [ ] **OCO update** on bracket leg edit (currently edit only allowed
+      pre-broker-submission)
+- [ ] **Margin requirement preview** in staging row (uses IBKR
+      `whatIf` order request)
+- [ ] **Partial-fill handling** edge cases — current row shows partial
+      but doesn't allow extending TIF or flattening just the unfilled
+      portion
+- [ ] **Multi-account** support (current P4 assumes one user/account)
+- [ ] **Real-time fill toasts** (currently SSE updates list; toast
+      on the dashboard would be nice)
 
 ## Phase 5 (forecast & backtest) — to do
 

@@ -77,14 +77,15 @@ Status legend: ✅ shipped · 🟡 partial / Phase 2 in progress · ⏳ planned
 | Feature | Status | Notes |
 | --- | --- | --- |
 | BrokerAdapter interface | ✅ | placeBracket, cancelOrder, cancelAll, getPositions, getDailyPnl |
-| IbkrAdapter (TWS API via @stoqey/ib) | 🟡 | skeleton; full impl in P4 |
-| Order staging UI with full risk profile | ⏳ | Phase 4 |
-| One-click confirm → fires bracket order | ⏳ | Phase 4 |
-| Live positions panel with real-time P&L | ⏳ | Phase 4 |
-| Kill switch (hold-to-confirm 2 s) | ⏳ | Phase 4 |
-| Optional flatten-positions on kill | ⏳ | Phase 4 |
-| Live-account red banner + type-to-confirm modal | ⏳ | Phase 4 |
-| Order history with broker IDs | ⏳ | Phase 4 |
+| IbkrAdapter (TWS API via @stoqey/ib) | 🟡 | full impl landing this commit (OCA bracket, auto-reconnect, EventEmitter for fills) |
+| Order staging UI with full risk profile | 🟡 | P4 — StagedOrderRow + RiskHeader |
+| One-click confirm → fires bracket order | 🟡 | P4 — POST /api/orders/:id/confirm |
+| Server-side risk middleware re-checks every order | 🟡 | P4 — runRiskCheck before broker dispatch |
+| Live positions panel with real-time P&L | 🟡 | P4 — SSE positions.update + 3s polling |
+| Kill switch (hold-to-confirm 2 s) | 🟡 | P4 — KillSwitch component |
+| Optional flatten-positions on kill | 🟡 | P4 — POST /api/orders/flatten-all |
+| Live-account red banner + type-to-confirm modal | 🟡 | P4 — LiveBanner + LiveModeModal |
+| Order history with broker IDs | 🟡 | P4 — /orders/history page |
 
 ## Journal
 

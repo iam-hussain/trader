@@ -76,7 +76,7 @@ detail page, LLM provider switcher, quant service skeleton.
 
 ---
 
-## Phase 3 — Trade signal & risk engine 🟡 (current)
+## Phase 3 — Trade signal & risk engine ✅
 
 **Goal:** turn analysis into validated trade ideas with hard risk discipline.
 
@@ -120,7 +120,7 @@ detail page, LLM provider switcher, quant service skeleton.
 
 ---
 
-## Phase 4 — Execution ⏳
+## Phase 4 — Execution 🟡 (current)
 
 **Goal:** stage and fire bracket orders to IBKR with hard server-side
 guardrails and a kill switch.

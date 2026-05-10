@@ -114,9 +114,17 @@ Brought up via `--profile ollama`. Pull models with
 `docker compose exec ollama ollama pull llama3.1:8b`. Used as a fallback or
 offline-mode LLM provider.
 
-### IB Gateway / TWS (Phase 4)
+### IB Gateway / TWS
 Runs on the user's desktop, not in a container (Interactive Brokers requires
 the GUI). The API connects to it on port 7497 (paper) or 7496 (live).
+
+The connection is owned by `packages/brokers/src/singleton.ts` — one shared
+adapter per process. The order service holds the **only** path that fires
+broker calls; every confirm hits `runRiskCheck` (`apps/api/src/middleware/
+risk-middleware.ts`) before `placeBracket`. Switching paper→live requires
+typing `LIVE` into the modal and a successful `POST /api/settings/broker/
+switch-mode`. The kill switch issues `reqGlobalCancel` and the optional
+flatten submits opposite-side market orders for every open position.
 
 ## Data flow — morning brief (Phase 3 target)
 
