@@ -1,6 +1,10 @@
 FROM node:20-bookworm-slim AS base
 WORKDIR /app
-RUN corepack enable
+RUN --mount=type=cache,id=apt,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+    openssl libssl3 ca-certificates \
+    && corepack enable
 
 FROM base AS deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml* package.json ./

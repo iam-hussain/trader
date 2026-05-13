@@ -94,7 +94,11 @@ def _vwap_intraday(df: pd.DataFrame) -> float | None:
 
 
 def _pivots(df: pd.DataFrame, window: int = 5) -> tuple[list[float], list[float]]:
-    six_months = df.last("180D") if isinstance(df.index, pd.DatetimeIndex) else df.tail(126)
+    if isinstance(df.index, pd.DatetimeIndex):
+        cutoff = df.index.max() - pd.Timedelta(days=180)
+        six_months = df.loc[df.index >= cutoff]
+    else:
+        six_months = df.tail(126)
     highs, lows = six_months["High"].values, six_months["Low"].values
     n = len(highs)
     pivot_highs: list[float] = []

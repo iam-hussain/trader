@@ -60,7 +60,21 @@ export async function replayRoutes(app: FastifyInstance) {
     if (!replay || replay.userId !== req.userId) {
       return reply.code(404).send({ error: "not_found" });
     }
-    return replay;
+    // Flatten the worker's stored result ({generatedSignals, actualSignals, diff})
+    // up to the top level so the frontend can consume them directly. Provide
+    // empty defaults so the page renders cleanly while status is queued/running.
+    const result =
+      replay.result && typeof replay.result === "object" && !Array.isArray(replay.result)
+        ? (replay.result as Record<string, unknown>)
+        : {};
+    return {
+      ...replay,
+      date: replay.date.toISOString().slice(0, 10),
+      generatedSignals: result.generatedSignals ?? [],
+      actualSignals: result.actualSignals ?? [],
+      diff: result.diff ?? null,
+      comparison: result.comparison ?? null,
+    };
   });
 
   app.post("/run", async (req, reply) => {

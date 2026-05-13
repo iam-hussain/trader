@@ -66,15 +66,21 @@ def _bundle_call(fn: Callable[..., dict[str, Any]], *args: Any, **kwargs: Any) -
 
 
 @router.get("/forecast/{symbol}")
-def bundle_endpoint(symbol: str) -> dict[str, Any]:
-    """Run prophet + garch + patterns concurrently with a per-task timeout."""
-    sym = _validate_symbol(symbol)
+def bundle_endpoint(symbol: str, days: int = 7, lookback: int = 60) -> dict[str, Any]:
+    """Run prophet + garch + patterns concurrently with a per-task timeout.
 
-    out: dict[str, Any] = {"symbol": sym}
+    `days`     forecast horizon in trading days (shared by prophet + garch).
+    `lookback` candle-pattern detection window in trading days.
+    """
+    sym = _validate_symbol(symbol)
+    horizon = max(1, int(days))
+    look = max(5, int(lookback))
+
+    out: dict[str, Any] = {"symbol": sym, "horizonDays": horizon}
     tasks: dict[str, Callable[[], dict[str, Any]]] = {
-        "prophet": lambda: _bundle_call(forecast_prophet, sym, periods=7),
-        "garch": lambda: _bundle_call(forecast_volatility, sym, horizon_days=5),
-        "patterns": lambda: _bundle_call(detect_patterns, sym, lookback_days=60),
+        "prophet": lambda: _bundle_call(forecast_prophet, sym, periods=horizon),
+        "garch": lambda: _bundle_call(forecast_volatility, sym, horizon_days=horizon),
+        "patterns": lambda: _bundle_call(detect_patterns, sym, lookback_days=look),
     }
 
     with ThreadPoolExecutor(max_workers=3) as pool:

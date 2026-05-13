@@ -21,6 +21,7 @@ import { positionsRoutes } from "./routes/positions.js";
 import { forecastRoutes } from "./routes/forecast.js";
 import { backtestRoutes } from "./routes/backtest.js";
 import { replayRoutes } from "./routes/replay.js";
+import { historyRoutes } from "./routes/history.js";
 import { attributionRoutes } from "./routes/attribution.js";
 import { authPlugin } from "./plugins/auth.js";
 import { startJobs, stopJobs } from "./jobs/index.js";
@@ -35,6 +36,25 @@ export async function buildServer() {
           : undefined,
     },
   });
+
+  // Treat empty application/json bodies as {} instead of erroring with
+  // FST_ERR_CTP_EMPTY_JSON_BODY. Lets clients POST to side-effect endpoints
+  // (e.g. /providers/validate/:provider) without sending a payload.
+  app.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    (_req, body, done) => {
+      const s = typeof body === "string" ? body : body.toString();
+      if (s.trim() === "") return done(null, {});
+      try {
+        done(null, JSON.parse(s));
+      } catch (err) {
+        const e = err as Error & { statusCode?: number };
+        e.statusCode = 400;
+        done(e, undefined);
+      }
+    }
+  );
 
   await app.register(sensible);
   await app.register(cors, { origin: true, credentials: true });
@@ -63,6 +83,7 @@ export async function buildServer() {
   await app.register(forecastRoutes, { prefix: "/api/forecast" });
   await app.register(backtestRoutes, { prefix: "/api/backtest" });
   await app.register(replayRoutes, { prefix: "/api/replay" });
+  await app.register(historyRoutes, { prefix: "/api/history" });
   await app.register(attributionRoutes, { prefix: "/api/attribution" });
   await app.register(tradingViewWebhookRoute, { prefix: "/api/webhooks" });
 

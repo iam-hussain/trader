@@ -15,19 +15,19 @@ lets you fire them with one-click confirm.
 
 The repo doubles as the living spec. Start here:
 
-| Doc | What |
-| --- | --- |
-| [`docs/IDEOLOGY.md`](docs/IDEOLOGY.md) | Why this exists. Principles. What we won't do. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System diagram, services, data flow. |
-| [`docs/FEATURES.md`](docs/FEATURES.md) | Full feature catalog — shipped / in-progress / planned. |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phases 1-5, deliverables, verification. |
-| [`docs/PROCESS.md`](docs/PROCESS.md) | How this is being built (plan mode, agents, conventions). |
-| [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) | Every external source, free/paid, usage limits. |
-| [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Run, troubleshoot, common chores. |
-| [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model, key handling, broker safety. |
-| [`docs/PENDING.md`](docs/PENDING.md) | Concrete TODOs by phase. |
-| [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | Trading + project jargon. |
-| [`docs/design/`](docs/design/) | Static HTML design canvas — UI source of truth. |
+| Doc                                            | What                                                      |
+| ---------------------------------------------- | --------------------------------------------------------- |
+| [`docs/IDEOLOGY.md`](docs/IDEOLOGY.md)         | Why this exists. Principles. What we won't do.            |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System diagram, services, data flow.                      |
+| [`docs/FEATURES.md`](docs/FEATURES.md)         | Full feature catalog — shipped / in-progress / planned.   |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md)           | Phases 1-5, deliverables, verification.                   |
+| [`docs/PROCESS.md`](docs/PROCESS.md)           | How this is being built (plan mode, agents, conventions). |
+| [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) | Every external source, free/paid, usage limits.           |
+| [`docs/OPERATIONS.md`](docs/OPERATIONS.md)     | Run, troubleshoot, common chores.                         |
+| [`docs/SECURITY.md`](docs/SECURITY.md)         | Threat model, key handling, broker safety.                |
+| [`docs/PENDING.md`](docs/PENDING.md)           | Concrete TODOs by phase.                                  |
+| [`docs/GLOSSARY.md`](docs/GLOSSARY.md)         | Trading + project jargon.                                 |
+| [`docs/design/`](docs/design/)                 | Static HTML design canvas — UI source of truth.           |
 
 ## Stack
 
@@ -66,12 +66,33 @@ cp .env.example .env
 # Set NEXTAUTH_SECRET to a random 32+ char string. Other keys can be added
 # later via the Settings page (encrypted in Mongo).
 
+docker compose down
+docker compose build --no-cache web api quant
 docker compose up -d
 docker compose exec api pnpm --filter @trader/db prisma:generate
 docker compose exec api pnpm --filter @trader/db prisma:push
 
 # Open http://localhost:3000, register an account, add a watchlist,
 # open /ticker/AAPL, see live quote + TradingView chart.
+```
+
+> The repo ships a `.dockerignore` that excludes `node_modules` and other
+> build artifacts from the build context. This is required: pnpm uses
+> symlinks inside the image, and a host-installed `node_modules/` will
+> collide with them and fail the build with `cannot copy to non-directory`.
+> See [`docs/OPERATIONS.md`](docs/OPERATIONS.md#cannot-copy-to-non-directory-appnode_modulespkg-during-build)
+> if you hit it.
+
+If anything in `docker-compose.yml`, a `Dockerfile`, `.dockerignore`, the
+lockfiles, or `pyproject.toml` changes, use the clean rebuild sequence
+instead — cached BuildKit layers can otherwise hide real errors:
+
+```bash
+docker compose down
+docker compose build --no-cache web api quant
+docker compose up -d
+docker compose exec api pnpm --filter @trader/db prisma:generate
+docker compose exec api pnpm --filter @trader/db prisma:push
 ```
 
 For more, see [`docs/OPERATIONS.md`](docs/OPERATIONS.md).

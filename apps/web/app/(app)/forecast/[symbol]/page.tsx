@@ -23,6 +23,19 @@ const TABS: Array<{ id: TabId; label: string; Icon: React.ComponentType<{ classN
   { id: "patterns", label: "Patterns", Icon: Shapes },
 ];
 
+// Trading-day approximations: ~21 td/month, ~252 td/year. Capped server-side
+// at 1260 trading days (~5y).
+const HORIZONS: Array<{ id: string; label: string; days: number }> = [
+  { id: "1d", label: "1D", days: 1 },
+  { id: "1w", label: "1W", days: 5 },
+  { id: "1m", label: "1M", days: 21 },
+  { id: "3m", label: "3M", days: 63 },
+  { id: "6m", label: "6M", days: 126 },
+  { id: "1y", label: "1Y", days: 252 },
+  { id: "2y", label: "2Y", days: 504 },
+  { id: "5y", label: "5Y", days: 1260 },
+];
+
 function ErrorPanel({ message }: { message: string }) {
   return (
     <div className="b-card p-4 text-[12px] t-neg">
@@ -294,9 +307,11 @@ export default function ForecastSymbolPage({
   const { symbol } = use(params);
   const sym = symbol.toUpperCase();
   const [tab, setTab] = useState<TabId>("direction");
+  const [horizonId, setHorizonId] = useState<string>("1w");
+  const horizon = HORIZONS.find((h) => h.id === horizonId) ?? HORIZONS[1];
 
   const { data, error, isLoading } = useSWR<ForecastBundle>(
-    `/api/forecast/${encodeURIComponent(sym)}`,
+    `/api/forecast/${encodeURIComponent(sym)}?days=${horizon.days}`,
     fetcher,
     { keepPreviousData: true },
   );
@@ -305,13 +320,28 @@ export default function ForecastSymbolPage({
     <>
       <Topbar crumbs={["Markets", "Forecast", sym]} />
       <div className="page max-w-[1100px] flex flex-col gap-3">
-        <div className="b-card p-3 flex items-center gap-2">
+        <div className="b-card p-3 flex items-center gap-2 flex-wrap">
           <span className="font-semibold mono tabular-nums text-[18px]">
             {sym}
           </span>
           <span className="text-[11px] t-dim">
             forecast bundle (Prophet · GARCH · patterns)
           </span>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[11px] t-dim uppercase tracking-[0.06em]">Horizon</span>
+            <div className="seg">
+              {HORIZONS.map((h) => (
+                <button
+                  key={h.id}
+                  className={clsx(horizonId === h.id && "active")}
+                  onClick={() => setHorizonId(h.id)}
+                  title={`${h.days} trading days`}
+                >
+                  {h.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="tabs">

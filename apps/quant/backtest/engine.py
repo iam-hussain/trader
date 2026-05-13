@@ -383,13 +383,31 @@ def _trade_pnl(position: Position, exit_price: float) -> float:
 
 
 def result_to_dict(result: BacktestResult) -> dict[str, Any]:
-    """Convert a BacktestResult into a JSON-serializable dict."""
+    """Convert a BacktestResult into a JSON-serializable dict.
+
+    Trade fields are camelCased here so the JS frontend can consume them
+    without a translation layer. KPIs already use camelCase by convention.
+    """
     return {
         "symbol": result.symbol,
         "strategy": result.strategy,
         "start": result.start,
         "end": result.end,
-        "trades": [asdict(t) for t in result.trades],
+        "trades": [
+            {
+                "entryDate": t.entry_date,
+                "exitDate": t.exit_date,
+                "side": t.side,
+                "entryPrice": t.entry_price,
+                "exitPrice": t.exit_price,
+                "qty": t.qty,
+                "pnl": t.pnl,
+                "pnlPct": t.return_pct,
+                "holdDays": t.hold_days,
+                "exitReason": t.reason,
+            }
+            for t in result.trades
+        ],
         "equityCurve": result.equity_curve,
         "kpis": result.kpis,
     }

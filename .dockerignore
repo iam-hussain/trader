@@ -1,0 +1,45 @@
+# Dependencies — must be excluded so pnpm symlinks created in the
+# `deps` stage are not clobbered by the host's local install.
+**/node_modules
+.pnpm-store
+.venv
+**/__pycache__
+**/*.pyc
+
+# Build outputs
+**/.next
+**/.turbo
+**/dist
+**/build
+**/*.tsbuildinfo
+
+# Env & secrets — pass via docker-compose env_file / environment instead
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# VCS & editor
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+.DS_Store
+
+# Data caches
+data/parquet
+data/duckdb
+data/cache
+
+# Logs & test
+**/*.log
+logs
+**/coverage
+**/.pytest_cache
+
+# Docker meta
+Dockerfile
+**/Dockerfile
+.dockerignore
+docker-compose*.yml

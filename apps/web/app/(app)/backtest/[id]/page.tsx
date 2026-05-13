@@ -454,12 +454,25 @@ function SortHeader({
 }
 
 function TradeRow({ trade }: { trade: BacktestTrade }) {
-  const pnl = trade.pnl ?? 0;
-  const pnlPct = trade.pnlPct ?? 0;
+  // Tolerate legacy snake_case trades that predate the camelCase fix in
+  // quant/backtest/engine.py:result_to_dict. New runs return camelCase only.
+  const t = trade as BacktestTrade & {
+    entry_date?: string;
+    exit_date?: string;
+    hold_days?: number;
+    return_pct?: number;
+    reason?: string;
+  };
+  const pnl = t.pnl ?? 0;
+  const pnlPct = t.pnlPct ?? t.return_pct ?? 0;
+  const holdDays = t.holdDays ?? t.hold_days ?? 0;
+  const entryDate = t.entryDate ?? t.entry_date ?? "";
+  const exitDate = t.exitDate ?? t.exit_date ?? "";
+  const exitReason = t.exitReason ?? t.reason;
   return (
     <tr style={{ borderTop: "1px solid var(--border)" }}>
-      <td className="p-2 mono tabular-nums t-dim">{trade.entryDate}</td>
-      <td className="p-2 mono tabular-nums t-dim">{trade.exitDate}</td>
+      <td className="p-2 mono tabular-nums t-dim">{entryDate}</td>
+      <td className="p-2 mono tabular-nums t-dim">{exitDate}</td>
       <td className="p-2">
         <span
           className={clsx(
@@ -494,9 +507,9 @@ function TradeRow({ trade }: { trade: BacktestTrade }) {
         {pnlPct.toFixed(2)}%
       </td>
       <td className="p-2 text-right mono tabular-nums">
-        {trade.holdDays.toFixed(1)}
+        {holdDays.toFixed(1)}
       </td>
-      <td className="p-2 t-dim">{trade.exitReason ?? "—"}</td>
+      <td className="p-2 t-dim">{exitReason ?? "—"}</td>
     </tr>
   );
 }

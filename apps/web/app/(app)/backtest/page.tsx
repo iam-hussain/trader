@@ -182,8 +182,8 @@ function NewBacktestForm({
       const { runId, jobId } = await runBacktest({
         strategy: strategyId,
         symbol: symbol.trim().toUpperCase(),
-        startDate,
-        endDate,
+        start: startDate,
+        end: endDate,
         params: paramVals,
       });
       setStatusMsg("Running…");

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "@trader/db";
-import { quantGet } from "../services/quant.js";
+import { quantGet, quantPost } from "../services/quant.js";
 import { backtestQueue, type BacktestJobResult } from "../jobs/queue.js";
 
 const SYMBOL_RE = /^[A-Z][A-Z0-9.\-]{0,9}$/;
@@ -165,5 +165,27 @@ export async function backtestRoutes(app: FastifyInstance) {
       error: job.failedReason,
       runId: result?.runId ?? job.data.runId,
     };
+  });
+
+  // Monte Carlo proxies straight to the quant service. The frontend sends
+  // {trades, iterations}; the quant API expects {trades, n_runs}.
+  const MonteCarloBody = z.object({
+    trades: z.array(z.record(z.string(), z.unknown())).min(1),
+    iterations: z.number().int().min(1).max(100_000).optional(),
+  });
+  app.post("/monte-carlo", async (req, reply) => {
+    const body = MonteCarloBody.safeParse(req.body);
+    if (!body.success) {
+      return reply.code(400).send({ error: body.error.flatten() });
+    }
+    try {
+      return await quantPost("/backtest/monte-carlo", {
+        trades: body.data.trades,
+        n_runs: body.data.iterations ?? 1000,
+      });
+    } catch (err) {
+      req.log.error({ err }, "monte-carlo proxy failed");
+      return reply.code(502).send({ error: "quant_unavailable" });
+    }
   });
 }

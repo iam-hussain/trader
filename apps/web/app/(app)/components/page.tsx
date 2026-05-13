@@ -1,23 +1,58 @@
+"use client";
 import { Topbar } from "@/components/Topbar";
 import { BriefTile } from "@/components/BriefTile";
 import { SignalRow } from "@/components/SignalRow";
 import { RiskCard } from "@/components/RiskCard";
 import { Spark, walk } from "@/components/Spark";
 import { ConfBar } from "@/components/ConfBar";
+import { notImplemented } from "@/lib/toast";
 
 export default function ComponentsPage() {
   return (
     <>
       <Topbar crumbs={["Reference", "Components"]} />
       <div className="page max-w-[1200px]">
+        <div className="text-[11px] text-fg-muted mb-3">
+          Design reference page — buttons are illustrative.
+        </div>
         <Section title="Buttons">
           <div className="flex gap-2 items-center">
-            <button className="btn">Default</button>
-            <button className="btn btn-primary">Primary</button>
-            <button className="btn btn-ghost">Ghost</button>
-            <button className="btn btn-danger">Danger</button>
-            <button className="btn btn-sm">Small</button>
-            <button className="btn btn-lg btn-primary">Large primary</button>
+            <button
+              className="btn"
+              onClick={() => notImplemented("Default button")}
+            >
+              Default
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => notImplemented("Primary button")}
+            >
+              Primary
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => notImplemented("Ghost button")}
+            >
+              Ghost
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={() => notImplemented("Danger button")}
+            >
+              Danger
+            </button>
+            <button
+              className="btn btn-sm"
+              onClick={() => notImplemented("Small button")}
+            >
+              Small
+            </button>
+            <button
+              className="btn btn-lg btn-primary"
+              onClick={() => notImplemented("Large primary button")}
+            >
+              Large primary
+            </button>
           </div>
         </Section>
 
@@ -43,10 +78,21 @@ export default function ComponentsPage() {
 
         <Section title="Segmented">
           <div className="seg">
-            <button className="active">All</button>
-            <button>Long</button>
-            <button>Short</button>
-            <button>Options</button>
+            <button
+              className="active"
+              onClick={() => notImplemented("Segmented: All")}
+            >
+              All
+            </button>
+            <button onClick={() => notImplemented("Segmented: Long")}>
+              Long
+            </button>
+            <button onClick={() => notImplemented("Segmented: Short")}>
+              Short
+            </button>
+            <button onClick={() => notImplemented("Segmented: Options")}>
+              Options
+            </button>
           </div>
         </Section>
 

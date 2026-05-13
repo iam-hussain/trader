@@ -147,6 +147,26 @@ QUANT_PORT=8001
 docker compose build --no-cache api
 ```
 
+### `cannot copy to non-directory: /app/node_modules/<pkg>` during build
+You ran `pnpm install` on the host first, so the repo root has a real
+`node_modules/`. Inside the container, the `deps` stage installs with pnpm,
+which writes `node_modules/<pkg>` as a symlink into `node_modules/.pnpm/`.
+The next stage's `COPY . .` then tries to overlay your host's real directory
+on top of that symlink and BuildKit refuses.
+
+The repo ships a `.dockerignore` that excludes `**/node_modules` precisely to
+prevent this. If you see the error, your context is leaking deps in. Verify
+and rebuild clean:
+
+```bash
+test -f .dockerignore && grep node_modules .dockerignore   # must match
+docker compose build --no-cache web api
+docker compose up -d
+```
+
+If you've edited `.dockerignore`, make sure `**/node_modules` is still in it.
+Deleting the host `node_modules/` is also a valid (heavier) workaround.
+
 ### Prisma can't connect after restart
 Replica set state can desync. Nuke and re-init:
 ```bash
@@ -175,3 +195,24 @@ docker compose down
 docker compose up -d --build
 docker compose exec api pnpm --filter @trader/db prisma:push
 ```
+
+## Full clean rebuild
+
+When `docker-compose.yml`, a `Dockerfile`, `.dockerignore`, `package.json`,
+`pnpm-lock.yaml`, or `pyproject.toml` changes, cached BuildKit layers can
+hold stale state and produce confusing errors (broken `node_modules`
+symlinks, half-installed pip wheels, half-initialised mongo data). The
+known-good reset sequence:
+
+```bash
+docker compose down
+docker compose build --no-cache web api quant
+docker compose up -d
+docker compose exec api pnpm --filter @trader/db prisma:generate
+docker compose exec api pnpm --filter @trader/db prisma:push
+```
+
+Use `docker compose down -v` instead of `down` if mongo is wedged from a
+previous half-initialised boot — that wipes the `mongo_data` and
+`redis_data` volumes too. You'll lose any local watchlists / journal /
+encrypted keys; everything else is re-derivable.

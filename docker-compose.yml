@@ -16,7 +16,32 @@ services:
       - mongo_data:/data/db
     # Mongo replica set is required by Prisma for transactions. We use a
     # single-node RS to keep local dev simple.
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    #
+    # MongoDB 6+ refuses to start with --replSet AND auth (which
+    # MONGO_INITDB_ROOT_* enables) unless a --keyFile is provided for
+    # inter-member auth. We generate one on first boot inside the data
+    # volume so it survives restarts, then hand off to the official
+    # docker-entrypoint so root user creation still happens normally.
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        KEY=/data/db/mongo-keyfile
+        if [ ! -s "$$KEY" ]; then
+          openssl rand -base64 756 > "$$KEY"
+          chmod 400 "$$KEY"
+          chown mongodb:mongodb "$$KEY"
+        fi
+        exec docker-entrypoint.sh "$$@"
+      - --
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
+      - --keyFile
+      - /data/db/mongo-keyfile
     healthcheck:
       test: |
         echo 'try { rs.status().ok } catch(e) { rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}).ok }' \
@@ -24,7 +49,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 20s
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -51,6 +76,20 @@ services:
       MONGO_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME:-trader}:${MONGO_INITDB_ROOT_PASSWORD:-trader}@mongo:27017/trader?authSource=admin&directConnection=true
       REDIS_URL: redis://redis:6379
       QUANT_PUBLIC_URL: http://quant:8000
+    # Bind-mount source for live reload via `tsx watch`. Anonymous volumes
+    # shadow node_modules dirs so pnpm's container-installed layout (which
+    # differs from the host's by OS/arch) is preserved.
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/packages/brokers/node_modules
+      - /app/packages/config/node_modules
+      - /app/packages/db/node_modules
+      - /app/packages/llm/node_modules
+      - /app/packages/schemas/node_modules
+      - /app/packages/ui/node_modules
     depends_on:
       mongo:
         condition: service_healthy
@@ -67,6 +106,20 @@ services:
     env_file: .env
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-4000}
+    # Bind-mount source for Next.js HMR. .next is anon-mounted to keep
+    # compilation cache off the slow macOS bind-mount layer.
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+      - /app/packages/brokers/node_modules
+      - /app/packages/config/node_modules
+      - /app/packages/db/node_modules
+      - /app/packages/llm/node_modules
+      - /app/packages/schemas/node_modules
+      - /app/packages/ui/node_modules
     depends_on:
       - api
 
@@ -78,7 +131,9 @@ services:
     ports:
       - "${QUANT_PORT:-8000}:8000"
     env_file: .env
+    # uvicorn auto-reloads when NODE_ENV=development (see main.py:287).
     volumes:
+      - ./apps/quant:/app
       - ./data:/app/data
 
   ollama:

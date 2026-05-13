@@ -145,7 +145,7 @@ model Setting {
   defaultHoldPeriod     String   @default("swing")
   blackoutMacroEvents   Boolean  @default(true)
   blackoutMinutes       Int      @default(30)
-  defaultLlmProvider    String   @default("anthropic")
+  defaultLlmProvider    String   @default("lmstudio")
   defaultLlmModel       String?
   ibkrMode              String   @default("paper") // paper | live
   ibkrHost              String   @default("127.0.0.1")
@@ -163,6 +163,9 @@ model ApiKey {
   ciphertext String   // base64 encrypted
   iv         String
   lastFour   String?  // hint for UI
+  /// Optional per-user override of the provider's base URL (gateway/proxy/LM Studio).
+  /// When unset, falls back to env (OLLAMA_HOST/LMSTUDIO_HOST) or the SDK default.
+  baseUrl    String?
   validated  Boolean  @default(false)
   validatedAt DateTime?
   createdAt  DateTime @default(now())

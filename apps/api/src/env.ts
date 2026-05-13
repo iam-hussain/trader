@@ -12,10 +12,14 @@ const Env = z.object({
   OPENAI_API_KEY: z.string().optional(),
   GOOGLE_API_KEY: z.string().optional(),
   OLLAMA_HOST: z.string().default("http://localhost:11434"),
+  OLLAMA_API_KEY: z.string().optional(),
+  OLLAMA_DEFAULT_MODEL: z.string().optional(),
   LMSTUDIO_HOST: z.string().default("http://localhost:1234"),
+  LMSTUDIO_API_KEY: z.string().optional(),
+  LMSTUDIO_DEFAULT_MODEL: z.string().optional(),
   DEFAULT_LLM_PROVIDER: z
     .enum(["anthropic", "openai", "google", "ollama", "lmstudio"])
-    .default("anthropic"),
+    .default("lmstudio"),
 
   IBKR_HOST: z.string().default("127.0.0.1"),
   IBKR_PORT: z.coerce.number().default(7497),
@@ -26,6 +30,13 @@ const Env = z.object({
   JOBS_ENABLED: z
     .enum(["true", "false"])
     .default("true")
+    .transform((v) => v === "true"),
+
+  // Dev convenience: when "true", requireAuth injects a fixed dev user
+  // instead of verifying JWT. NEVER set true in production.
+  AUTH_DISABLED: z
+    .enum(["true", "false"])
+    .default("false")
     .transform((v) => v === "true"),
 });
 

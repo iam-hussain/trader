@@ -4,12 +4,19 @@ import { quantGet } from "../services/quant.js";
 
 const SYMBOL_RE = /^[A-Z][A-Z0-9.\-]{0,9}$/;
 
+// Forecast horizons: 1d, 1w (~5td), 1m (~21td), 3m (~63td), 6m (~126td),
+// 1y (~252td), 2y (~504td), 5y (~1260td). Cap at 1260 trading days (~5y).
 const ProphetQuery = z.object({
-  days: z.coerce.number().int().min(1).max(60).default(7),
+  days: z.coerce.number().int().min(1).max(1260).default(7),
 });
 
 const GarchQuery = z.object({
-  days: z.coerce.number().int().min(1).max(30).default(5),
+  days: z.coerce.number().int().min(1).max(1260).default(5),
+});
+
+const BundleQuery = z.object({
+  days: z.coerce.number().int().min(1).max(1260).default(7),
+  lookback: z.coerce.number().int().min(5).max(365).default(60),
 });
 
 const PatternsQuery = z.object({
@@ -24,8 +31,14 @@ export async function forecastRoutes(app: FastifyInstance) {
     if (!SYMBOL_RE.test(symbol)) {
       return reply.code(400).send({ error: "invalid_symbol" });
     }
+    const query = BundleQuery.safeParse(req.query);
+    if (!query.success) {
+      return reply.code(400).send({ error: query.error.flatten() });
+    }
     try {
-      return await quantGet(`/forecast/${symbol}`);
+      return await quantGet(
+        `/forecast/${symbol}?days=${query.data.days}&lookback=${query.data.lookback}`
+      );
     } catch (err) {
       req.log.error({ err, symbol }, "forecast bundle failed");
       return reply.code(502).send({ error: "quant_unavailable" });

@@ -124,15 +124,17 @@ export default function ReplayDetailPage({
 
   // Status maps for left/right columns: match status by ticker
   const statusByTicker = new Map<string, "match" | "extra" | "missing">();
+  const generatedSignals = data?.generatedSignals ?? [];
+  const actualSignals = data?.actualSignals ?? [];
   if (data?.diff) {
     for (const d of data.diff) statusByTicker.set(d.ticker, d.status);
   } else if (data) {
-    const actualSet = new Set(data.actualSignals.map((s) => s.ticker));
-    const generatedSet = new Set(data.generatedSignals.map((s) => s.ticker));
-    for (const g of data.generatedSignals) {
+    const actualSet = new Set(actualSignals.map((s) => s.ticker));
+    const generatedSet = new Set(generatedSignals.map((s) => s.ticker));
+    for (const g of generatedSignals) {
       statusByTicker.set(g.ticker, actualSet.has(g.ticker) ? "match" : "extra");
     }
-    for (const a of data.actualSignals) {
+    for (const a of actualSignals) {
       if (!generatedSet.has(a.ticker)) statusByTicker.set(a.ticker, "missing");
     }
   }
@@ -213,16 +215,16 @@ export default function ReplayDetailPage({
                     Generated signals
                   </div>
                   <span className="text-[11px] t-dim mono tabular-nums">
-                    {data.generatedSignals.length}
+                    {generatedSignals.length}
                   </span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {data.generatedSignals.length === 0 ? (
+                  {generatedSignals.length === 0 ? (
                     <div className="b-card p-3 text-[12px] t-dim">
                       No signals generated.
                     </div>
                   ) : (
-                    data.generatedSignals.map((s, i) => (
+                    generatedSignals.map((s, i) => (
                       <SignalLine
                         key={`${s.ticker}-${i}`}
                         sig={s}
@@ -239,16 +241,16 @@ export default function ReplayDetailPage({
                     Actual brief signals
                   </div>
                   <span className="text-[11px] t-dim mono tabular-nums">
-                    {data.actualSignals.length}
+                    {actualSignals.length}
                   </span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {data.actualSignals.length === 0 ? (
+                  {actualSignals.length === 0 ? (
                     <div className="b-card p-3 text-[12px] t-dim">
                       No signals in actual brief.
                     </div>
                   ) : (
-                    data.actualSignals.map((s, i) => (
+                    actualSignals.map((s, i) => (
                       <SignalLine
                         key={`${s.ticker}-${i}`}
                         sig={s}

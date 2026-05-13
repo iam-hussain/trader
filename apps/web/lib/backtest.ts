@@ -86,8 +86,8 @@ export interface RunsResponse {
 export interface RunBacktestInput {
   strategy: string;
   symbol: string;
-  startDate?: string;
-  endDate?: string;
+  start: string;
+  end: string;
   params?: Record<string, unknown>;
 }
 

@@ -12,7 +12,9 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { api, fetcher } from "@/lib/api";
+import { toast } from "@/lib/toast";
+import { Zap } from "lucide-react";
 import { KpiTile } from "@/components/KpiTile";
 import { NewsTile, type NewsArticle } from "@/components/NewsTile";
 import { PutCallGauge } from "@/components/PutCallGauge";
@@ -49,9 +51,17 @@ interface PutCallSource {
   ratio: number;
 }
 
+interface PutCallReconciled {
+  ratio: number;
+  count?: number;
+  sources?: PutCallSource[];
+  spread?: number;
+  method?: string;
+}
+
 interface OptionsAnalysis {
   putCall?: PutCallSource[];
-  putCallReconciled?: number;
+  putCallReconciled?: PutCallReconciled;
   unusualActivity?: UnusualActivityItem[];
   maxPain?: number;
   ivRank?: number;
@@ -111,6 +121,24 @@ export default function TickerPage({
   const { symbol } = use(params);
   const sym = symbol.toUpperCase();
   const [tab, setTab] = useState<TabId>("overview");
+  const [briefBusy, setBriefBusy] = useState(false);
+
+  const runBriefForSymbol = async () => {
+    if (briefBusy) return;
+    setBriefBusy(true);
+    try {
+      await api("/api/briefs/generate", {
+        method: "POST",
+        body: JSON.stringify({ session: "midday", symbols: [sym] }),
+      });
+      toast(`Brief queued for ${sym}`, "success");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast(`Failed to queue brief: ${msg}`, "error");
+    } finally {
+      setBriefBusy(false);
+    }
+  };
 
   // Hash sync
   useEffect(() => {
@@ -219,6 +247,15 @@ export default function TickerPage({
           )}
         </div>
         <div className="flex gap-2 shrink-0">
+          <button
+            className="btn btn-sm"
+            onClick={runBriefForSymbol}
+            disabled={briefBusy}
+            title={`Run brief for ${sym}`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            Run brief for {sym}
+          </button>
           <button className="btn">
             <Plus className="w-4 h-4" />
             Watchlist
@@ -366,13 +403,13 @@ export default function TickerPage({
             />
             <KpiTile
               label="P/C reconciled"
-              value={analysis?.options?.putCallReconciled ?? null}
+              value={analysis?.options?.putCallReconciled?.ratio ?? null}
               hint="Reconciled put/call ratio across sources"
             />
           </div>
           <PutCallGauge
             ratio={
-              analysis?.options?.putCallReconciled ??
+              analysis?.options?.putCallReconciled?.ratio ??
               analysis?.options?.putCall?.[0]?.ratio ??
               0
             }
